@@ -1,0 +1,121 @@
+;  Origionally from some old OS design I made.
+; Then became MinOS
+; Kernel reused in NTIOS 0.1
+; Copyright Dylan Brophy 2017
+;
+org $0000
+; CONFIGURATION
+print: equ uart_print ; send text data where?
+input: equ uart_input ; get user input from?
+send:  equ uart_send  ; send chars to?
+stack_top:     equ $FFFF
+keyboard_port: equ $20 ; where is the keyboard in IO land?
+vectors:
+	jp os_start ; 0000
+	jp ostream  ; 0003
+	jp print    ; 0006
+	jp alloc    ; 0009
+	jp 0;delete   000C
+	jp strcomp  ; 000F
+	jp input    ; 0012
+	jp 0000     ; 0015
+	jp 0000;endpgm   ; 0018
+	
+	jp 0000     ; 001B
+	jp 0000     ; 001E
+	jp 0000     ; 0021
+	jp 0000     ; 0024
+	nop
+	jp 0000     ; 0028
+	jp 0000     ; 002B
+	jp 0000     ; 002E
+	jp 0000     ; 0031
+	jp 0000     ; 0034
+nop             ; 0037
+int38:          ; 0038, Z80 interrupt mode 1 vector
+	push hl
+	push af
+	push de
+	push bc
+	push ix
+	push iy
+	jp 55 ; lol
+	pop iy
+	pop ix
+	pop bc
+	pop de
+	pop af
+	pop hl
+	reti
+os_start:
+	di
+	ld sp, stack_top
+	ld hl, 0
+	ld (heap_vars), hl  ; delete all dynamically allocated variables, they shouldn't exist.
+	ld hl, heap_bottom
+	ld (heap_top),  hl  ; make the heap empty
+	; Hardware (UART) setup if using 1.843MHz clock
+	ld a, $80 
+	out (3), a          ; SET DLAB
+	ld a, 12
+	out (0), a
+	ld a, 0
+	out (1), a        
+	ld a, 3
+	out (3), a          ; 8-bit serial, RESET DLAB
+	ld a, 1
+	out (2), a          ; enable FIFOs
+	
+	jp terminal_pgm     ; start terminal program! WOOO!
+INCLUDE "string.z80"
+INCLUDE "uart.z80"
+INCLUDE "memory.z80"
+INCLUDE "keyboard.z80"
+terminal_pgm:
+	ld hl, term_start_string   ; pleasantly start the terminal
+	call print
+	ld hl, 128
+	call alloc              ; A 1K bootloader happens to have dynamic memory allocation. Interesting thing to use space on!
+	ld (term_kbd_buff), hl
+terminal_loop:
+	ld hl, term_cursor
+	call ostream
+    ld hl, (term_kbd_buff)
+	call input
+	
+	ld de, helpcmd
+	call strcomp            ; seek'n help? we got you!
+	jr z, helpdisplay
+	
+	ld de, clearcmd
+	call strcomp
+	jr z, cls
+	
+	ld hl, no_cmd
+	call print
+	jp terminal_loop
+helpdisplay:
+	ld hl, helpstr
+    call print
+    jr terminal_loop
+cls:
+	ld a, 0
+	call send
+	jr terminal_loop
+term_start_string: db "NTIOS 0.1", 0
+term_cursor:       db "# ", 0
+helpcmd:           db "help", 0
+runcmd:            db "run", 0
+clearcmd:          db "cls", 0
+helpstr:           db "save, load, run, cls, list", 0
+no_cmd:            db "Command Not Found.", 0
+heap_vars:     equ $8000
+heap_top:      equ $8001
+tmp:           equ $8003
+term_kbd_buff: equ $8005
+dellooptmp:    equ $8007
+pc:            equ $8009
+heap_list:     equ $8011
+heap_bottom:   equ $8111
+
+

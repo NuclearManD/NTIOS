@@ -1,0 +1,15 @@
+strcomp: 
+	push de
+	push hl
+strcomp_l: 
+    ld a,(de) 
+    cp (hl) 
+    jp nz, strcret    ;nz means they are not equal 
+    inc hl 
+    inc de 
+    or a       ;set the z flag if they're equal
+    jp nz, strcomp_l
+strcret:
+	pop hl
+	pop de
+	ret

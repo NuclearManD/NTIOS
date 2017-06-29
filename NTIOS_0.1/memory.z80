@@ -1,0 +1,30 @@
+; alloc - allocate hl bytes of memory, hl returns its address.
+
+alloc:
+	ld de, (heap_top)
+	add hl, de           ; get the new heap top
+	
+	ld (heap_top), hl    ; expand the heap
+	
+	push de              ; push the old heap top onto the stack 
+	
+	ld de, (heap_vars)
+	sla e
+    rl d
+	ld hl, heap_list
+	add hl, de           ; get where we are going to put the next heap_var
+	
+    push hl
+    pop de
+	ld (tmp), sp
+    ld hl, (tmp)
+	ldi                  ; store the value of the new heap var
+    pop de
+    
+	ld hl, heap_vars
+	inc (hl)             ; we now have one more heap var
+	
+	push de            ; hl now contains the address of the allocated space
+	pop hl
+    
+    ret
