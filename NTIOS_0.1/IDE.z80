@@ -1,0 +1,120 @@
+;***************************************************************************
+;  PROGRAM:			ideDriver        
+;  PURPOSE:			Subroutines for a ide Card
+;  ASSEMBLER:		TASM 3.2        
+;  LICENCE:			The MIT Licence
+;  AUTHOR :			MCook
+;  CREATE DATE :	19 June 15
+; Modified by Dylan Brophy 17/6/28
+;***************************************************************************
+
+;The addresses that the ide Card resides in I/O space.
+;Change to suit hardware.
+ide_data:		EQU	ide_port + $00		; Data (R/W)
+ide_error:		EQU	ide_port + $01		; Error register (R)
+ide_features:	EQU	ide_port + $01		; Features (W)
+ide_sectors:	EQU	ide_port + $02		; Sector count (R/W)
+ide_LBA0:		EQU	ide_port + $03		; LBA bits 0-7 (R/W, _LBA mode)
+ide_LBA1:		EQU	ide_port + $04		; LBA bits 8-15 (R/W, _LBA mode)
+ide_LBA2:		EQU	ide_port + $05		; LBA bits 16-23 (R/W, _LBA mode)
+ide_LBA3:		EQU	ide_port + $06		; LBA bits 24-27 (R/W, _LBA mode)
+ide_status:		EQU	ide_port + $07		; Status (R)
+ide_cmd:		EQU	ide_port + $07		; Command (W)	
+
+;***************************************************************************
+;ide_init
+;Function: Initialize ide to 8 bit data transfer mode
+;***************************************************************************	
+ide_init:
+	CALL	ide_wait_rdy
+	LD		A,$01						;LD features register to enable 8 bit
+	OUT		(ide_features),A
+	CALL	ide_wait_rdy
+	LD		A,$EF						;Send set features command
+	OUT		(ide_cmd),A
+	CALL	ide_wait_rdy
+	RET
+
+;***************************************************************************
+;ide_wait_rdy
+;Function: Loops until status register bit 7 (busy) is 0
+;***************************************************************************	
+ide_wait_rdy:
+	IN		A, (ide_status)					;Read status
+	AND		%10000000					;Mask busy bit
+	JP		NZ,ide_wait_rdy				;Loop until busy(7) is 0
+	RET
+
+;***************************************************************************
+;ide_drv_rdy
+;Function: Loops until status register bit 7 (busy) is 0 and drvrdy(6) is 1
+;***************************************************************************	
+ide_drv_rdy:
+	IN		A,(ide_status)					;Read status
+	AND		%11000000					;mask off busy and rdy bits
+	XOR		%01000000					;we want busy(7) to be 0 and drvrdy(6) to be 1
+	JP		NZ,ide_drv_rdy
+	RET
+
+;***************************************************************************
+;ide_drq_1
+;Function: Loops until status register bit 7 (busy) is 0 and drq(3) is 1
+;***************************************************************************		
+ide_drq_1:
+	IN		A,(ide_status)					;Read status
+	AND		%10001000					;mask off busy and drq bits
+	XOR		%00001000					;we want busy(7) to be 0 and drq(3) to be 1
+	JP		NZ,ide_drq_1
+	RET
+	
+;***************************************************************************
+;ide_rd_sector
+;Function: Gets a sector (512 bytes) into RAM buffer.
+; HL is where to load the sector
+;***************************************************************************			
+ide_rd_sector:
+	LD 		A,1
+	OUT 	(ide_sectors),A					;Deal with only one sector at a time (512 bytes)
+	CALL	ide_drv_rdy				;Make sure drive is ready for command
+	LD		A,$20						;Prepare read command
+	OUT		(ide_cmd),A					;Send read command
+	CALL	ide_drq_1				;Wait until data is ready to be read
+	IN		A,(ide_status)					;Read status
+	AND		%00000001					;mask off error bit
+	JP		NZ,ide_rd_sector				;Try again if error
+	LD 		B,0							;read 256 words (512 bytes per sector)
+.ide_RD_SECT:
+	CALL	ide_drq_1	
+	IN 		A,(ide_data)					;get byte of ide data	
+	LD 		(HL),A
+	INC 	HL
+	CALL	ide_drq_1
+	IN 		A,(ide_data)					;get byte of ide data	
+	LD 		(HL),A
+	INC 	HL
+	DJNZ 	.ide_RD_SECT
+	RET
+	
+;***************************************************************************
+;ide_load
+;Function: set LBA address and get 512 bytes from drive
+; bc is lower word of address
+; de is upper word of address
+; hl is where to put the sector
+;***************************************************************************
+ide_load:
+	LD      A,c
+	OUT		(ide_LBA0),A					;_LBA 0:7
+	CALL 	ide_wait_rdy
+	LD      A,b
+	OUT		(ide_LBA1),A					;_LBA 8:15
+	CALL 	ide_wait_rdy
+	LD      A,e
+	OUT 	(ide_LBA2),A					;_LBA 16:23
+	CALL 	ide_wait_rdy
+	LD 		A,d								;Selects ide as master
+	and A, 15
+	or A, $E0
+	OUT 	(ide_LBA3),A					;_LBA 24:27 + DRV 0 selected + bits 5:7=111
+	CALL	ide_rd_sector
+	RET

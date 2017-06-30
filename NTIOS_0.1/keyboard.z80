@@ -25,13 +25,13 @@ kbd_input:
 	dec hl
 	ld a, 8
 	call send
-	ld a, 20
+	ld a, $20
 	call send
 	ld a, 8
 	call send
 	jr .wait
 .done:
-	xor a
-	ld (hl), a
+	pop af
+	pop bc
 	pop hl
 	ret

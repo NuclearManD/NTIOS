@@ -39,14 +39,26 @@ uart_input:
 	bit 0, a
 	jp z, .lopen
 	in a, (0)
+	cp 8
+	jp z, .delete
 	out (0), a
 	cp 13
 	jp z, .done
 	ld (hl), a
 	inc hl
 	jp .lopen
+.delete:
+	dec hl
+	ld a, 8
+	call send
+	ld a, ' '
+	call send
+	ld a, 8
+	call send
+	jr .lopen
 .done:
-	pop af
-	pop bc
+	xor a
+	ld (hl), a
 	pop hl
 	ret
+	

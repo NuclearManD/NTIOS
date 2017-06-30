@@ -8,10 +8,18 @@ org $0000
 print: equ uart_print ; send text data where?
 input: equ uart_input ; get user input from?
 send:  equ uart_send  ; send chars to?
+reboot: equ os_start
+
+ssd_writable: equ 1
 stack_top:     equ $FFFF
+
+
+ide_port:      equ $08
 keyboard_port: equ $20 ; where is the keyboard in IO land?
+
+
 vectors:
-	jp os_start ; 0000
+	jp os_start ; 0000 (reboot)
 	jp ostream  ; 0003
 	jp print    ; 0006
 	jp alloc    ; 0009
@@ -66,48 +74,111 @@ os_start:
 	ld a, 1
 	out (2), a          ; enable FIFOs
 	
+	ld a, 0
+	call uart_send
+	
 	jp terminal_pgm     ; start terminal program! WOOO!
+system_error:
+	call print
+	ld hl, .msg
+	call print
+	call input
+	jp 0
+.msg: db "Computer will not recover, press enter to reboot.", 0
 INCLUDE "string.z80"
 INCLUDE "uart.z80"
 INCLUDE "memory.z80"
 INCLUDE "keyboard.z80"
+INCLUDE "ssd.z80"
 terminal_pgm:
 	ld hl, term_start_string   ; pleasantly start the terminal
 	call print
-	ld hl, 128
+	ld hl, 32
 	call alloc              ; A 1K bootloader happens to have dynamic memory allocation. Interesting thing to use space on!
 	ld (term_kbd_buff), hl
-terminal_loop:
+.loop:
 	ld hl, term_cursor
 	call ostream
     ld hl, (term_kbd_buff)
 	call input
 	
-	ld de, helpcmd
+	ld de, cmd_help
 	call strcomp            ; seek'n help? we got you!
-	jr z, helpdisplay
+	jr z, .help
 	
-	ld de, clearcmd
+	ld de, cmd_cls
 	call strcomp
-	jr z, cls
+	jr z, .cls
+	
+	ld de, cmd_mem
+	call strcomp
+	jr z, .mem
+	
+	ld de, cmd_dir
+	call strcomp
+	jr z, .dir
+	
+	ld de, cmd_reboot
+	call strcomp
+	jp z, reboot
+	
+	ld de, cmd_open
+	call strcomp
+	jp z, .open
 	
 	ld hl, no_cmd
 	call print
-	jp terminal_loop
-helpdisplay:
+	jp .loop
+.help:
 	ld hl, helpstr
     call print
-    jr terminal_loop
-cls:
+    jr .loop
+.cls:
 	ld a, 0
 	call send
-	jr terminal_loop
+	jr .loop
+.dir:
+	ld hl, 128
+	call alloc   ; alloc
+	call ssd_list_files
+	call print
+	call rm_last ; free
+	jp .loop
+.mem:
+	ld a, '0'
+	call send
+	ld a, 'x'
+	call send
+	call bytes_free
+	ld hl, 0x8001
+	call int_to_hex
+	call ostream
+	ld hl, .bytes_str
+	call print
+	call rm_last ; free bytes allocated by call to int_to_hex
+	jp .loop
+.open:
+	ld a, '>'
+	call send
+	ld hl, (term_kbd_buff)
+	call input
+	ld a, 1
+	call ssd_open
+	call ssd_read
+	call print
+	call rm_last
+	;call rm_last
+	jp .loop
+.bytes_str: db " Bytes", 0
 term_start_string: db "NTIOS 0.1", 0
 term_cursor:       db "# ", 0
-helpcmd:           db "help", 0
-runcmd:            db "run", 0
-clearcmd:          db "cls", 0
-helpstr:           db "save, load, run, cls, list", 0
+cmd_help:          db "help", 0
+cmd_mem:           db "mem", 0
+cmd_cls:           db "cls", 0
+cmd_dir:			db "dir", 0
+cmd_reboot:			db "reboot", 0
+cmd_open:			DB "open", 0
+helpstr:           db "cls, mem, dir, reboot, open", 0
 no_cmd:            db "Command Not Found.", 0
 heap_vars:     equ $8000
 heap_top:      equ $8001
@@ -118,4 +189,9 @@ pc:            equ $8009
 heap_list:     equ $8011
 heap_bottom:   equ $8111
 
-
+ssd_fs:
+	db "test.txt", 0
+	dw 19
+	dw no_cmd
+test_bin_end:
+	db 0
