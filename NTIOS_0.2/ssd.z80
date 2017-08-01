@@ -1,0 +1,153 @@
+; STRUCT File
+;   dw char* name
+;   db args
+;   dw byte* data
+;
+SSD_RD: equ 1
+SSD_WR: equ 2
+SSD_AP: equ 4
+; ssd_open - open file named hl for file object in hl
+; NOTE:  allocates 2 areas of RAM.  One for file name and another for the object itself.
+ssd_open:
+	push bc
+	push de
+	push af
+	
+	ld d, h   ; source of file name
+	ld e, l
+	call len  ; get string length
+	ld h, b   ; string length -> hl
+	ld l, c
+	inc hl    ; account for end byte
+	call alloc
+	push hl   ; save position of string in RAM
+	ex de, hl ; load source and destination into proper registers
+	; bc already contains string length
+	ldir      ; copy filename to new allocated space  
+	
+	ld hl, 5  ; size of object in bytes
+	call alloc; allocate it
+	pop de    ; get back position of string
+	pop af    ; get back file args
+	push hl   ; save file object pointer
+	ld (hl), e
+	inc hl    ; save string pos
+	ld (hl), d
+	inc hl
+	ld (hl), a; save file args
+	inc hl
+	and a, 1
+	jp z, .done_wr
+	; read file...
+	push hl   ; save our offset in memory
+	ld hl, ssd_fs
+.loop:
+	ld a, (hl)
+	or a
+	jp z, .error
+	call strcomp
+	jp z, .found
+	ld bc, $100
+	ld a, 0
+	cpir
+	ld bc, 5 ; 1 byte to leave NULL terminator of string, 4 bytes for next object in file system
+	add hl, bc
+	jp .loop
+.found:
+	ld bc, $100
+	ld a, 0
+	cpir   ; search for zero
+	
+	inc hl ; leave behind the NULL terminator
+	
+	ld c, (hl)
+	inc hl    ; get file length
+	ld b, (hl)
+	inc hl
+	
+	ld e, (hl)
+	inc hl    ; get file position in memory
+	ld d, (hl)
+	
+	push de   ; save file positon
+	push bc
+	pop hl    ; hl is now file length
+	; pointer to file data on disk is pushed on stack, HL and BC hold the length of that file.
+	call alloc
+	ex de, hl ; de now holds the address of the allocated buffer
+	pop hl
+	; Now de is destination for copy, hl is source, and bc is length.
+	push de ; save buffer pointer
+	ldir    ; copy
+	pop de  ; get back buffer pointer
+	pop hl  ; restore object position+offset
+	ld (hl), e
+	inc hl
+	ld (hl), d
+	jp .done
+.error:
+	ld de, .errmsg
+	pop hl ; restore offset
+	ld (hl), e
+	inc hl ; save error message as file data
+	ld (hl), d
+	pop hl ; restore file object location
+	pop de
+	pop bc
+	ret
+.done_wr:
+	ld (hl), 0
+	inc hl ; zeros because file was never read
+	ld (hl), 0
+.done:
+	pop hl ; get back file object pointer
+	pop de ; get back other data
+	pop bc
+	ret
+.errmsg: db "Error: File Not Found.", 0
+; ssd_list_files - hl is pointer to buffer for file list placement.  Allocate at _least_ 64 bytes.
+ssd_list_files:
+	push bc
+	push hl
+	push de
+	ld de, ssd_fs
+	ex de, hl
+	ld bc, 5
+.loop:
+	ld a, (hl)
+	or a
+	jp z, .next
+	ld (de), a
+	inc de
+	inc hl
+	jp .loop
+.next:
+	add hl, bc
+	ld a, (hl)
+	or a
+	jp z, .done
+	ld a, ','
+	ld (de), a
+	inc de
+	jp .loop
+.done:
+	xor a
+	ld (de), a
+	pop de
+	pop hl
+	pop bc
+	ret
+; ssd_read - returns pointer to file contents in hl, from file pointer hl
+ssd_read:
+	push de
+	
+	inc hl
+	inc hl ; offset +0x03
+	inc hl
+	
+	ld e, (hl)
+	inc hl
+	ld d, (hl)
+	ex de, hl
+	pop de
+	ret

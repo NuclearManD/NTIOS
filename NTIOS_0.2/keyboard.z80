@@ -1,0 +1,37 @@
+; kbd_input - get user input, stored in buffer pointed to by hl
+kbd_input:
+	push hl
+	push bc
+	push af
+	ld bc, keyboard_port
+.loop:
+	in a, (c)
+	or a
+	jr z, .loop
+	cp $0D
+	jr z, .done
+	cp $80
+	jr z, .delete
+	ld (hl), a
+	call send
+	ld b, a
+	inc hl
+.wait:
+	in a, (c)
+	cp b
+	jr nz, .loop
+	jr .wait
+.delete:
+	dec hl
+	ld a, 8
+	call send
+	ld a, $20
+	call send
+	ld a, 8
+	call send
+	jr .wait
+.done:
+	pop af
+	pop bc
+	pop hl
+	ret
