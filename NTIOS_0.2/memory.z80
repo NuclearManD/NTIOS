@@ -2,13 +2,13 @@
 
 alloc:
 	ld a, h
-	and 12
-	jp nz, .error1
+	cp 12
+	jp nc, .error1
 	ld de, (heap_top)
 	add hl, de           ; get the new heap top
 	ld a, $80
-	and h
-	jp z, .error
+	cp h
+	jp c, .error
 	ld (heap_top), hl    ; expand the heap
 	
 	push de              ; push the old heap top onto the stack 
@@ -35,8 +35,17 @@ alloc:
     ret
 .error:
 	ld hl, .err_msg
+	call ostream
+	ld hl, heap_top
+	ld de, (heap_top)
+	ld a, $90
+	ld (hl), a
+	inc hl
+	ld (hl), a
+	ex de, hl
+	call int_to_hex ; I hope this works here
 	jp system_error
-.err_msg: db "ERROR: heap top is at an invalid address.", 0
+.err_msg: db "ERROR: heap top is at an invalid address:", 0
 .error1:
 	ld hl, .err2_msg
 	call print
@@ -75,3 +84,12 @@ bytes_free:
 	ret
 
 
+memory_init:
+	push hl
+	ld hl, heap_bottom
+	ld (heap_top),hl
+	ld hl, 0
+	ld (heap_vars),hl
+	pop hl
+	ret
+	

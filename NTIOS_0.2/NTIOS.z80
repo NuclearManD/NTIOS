@@ -61,6 +61,7 @@ os_start:
 	di
 	ld sp, stack_top
 	ld hl, 0
+	call memory_init
 	; Hardware (UART) setup if using 18.43MHz clock
 	ld a, $80 
 	out (3), a			; SET DLAB
@@ -92,6 +93,8 @@ INCLUDE "uart.z80"
 INCLUDE "memory.z80"
 INCLUDE "keyboard.z80"
 INCLUDE "ssd.z80"
+cmd_help:          db "help", 0
+helpstr:           db "cls, mem, dir, reboot, open", 0
 terminal_pgm:
 	ld hl, term_start_string   ; pleasantly start the terminal
 	call print
@@ -153,15 +156,15 @@ terminal_pgm:
 	call ostream
 	ld hl, .bytes_str
 	call print
-	ld hl, (heap_top)
-	call int_to_hex
-	call print
-	ld hl, 0
-	add hl, sp
-	call int_to_hex
-	call print
-	call rm_last ; free bytes allocated by call to int_to_hex
-	call rm_last ; free bytes allocated by call to int_to_hex
+	;ld hl, (heap_top)
+	;call int_to_hex
+	;call print
+	;ld hl, 0
+	;add hl, sp
+	;call int_to_hex
+	;call print
+	;call rm_last ; free bytes allocated by call to int_to_hex
+	;call rm_last ; free bytes allocated by call to int_to_hex
 	call rm_last ; free bytes allocated by call to int_to_hex
 	jp .loop
 .open:
@@ -179,13 +182,11 @@ terminal_pgm:
 .bytes_str: db " Bytes", 0
 term_start_string: db "NTIOS 0.1", 0
 term_cursor:       db "# ", 0
-cmd_help:          db "help", 0
 cmd_mem:           db "mem", 0
 cmd_cls:           db "cls", 0
 cmd_dir:			db "dir", 0
 cmd_reboot:			db "reboot", 0
 cmd_open:			DB "open", 0
-helpstr:           db "cls, mem, dir, reboot, open", 0
 no_cmd:            db "Command Not Found.", 0
 heap_vars:     equ $8000
 heap_top:      equ $8002
@@ -193,10 +194,10 @@ tmp:           equ $8004
 term_kbd_buff: equ $8006
 heap_list:     equ $8086 ; lol
 heap_bottom:   equ $8186
-
+teststr: db "Get rekt bAd kidZ.",0
 ssd_fs:
 	db "test.txt", 0
 	dw 19
-	dw no_cmd
+	dw teststr
 test_bin_end:
 	db 0
