@@ -1,0 +1,208 @@
+; Monitor Program 0.-1
+org 0
+ide_port:      equ $08
+keyboard_port: equ $20 ; where is the keyboard in IO land?
+loader:
+	ld hl, .end
+	ld de, $9000
+	ld bc, .len
+	ldir
+	jp $9000
+.end:
+.len: equ rom_end-os_start
+org $9000
+os_start:
+	di
+	ld sp, $FFFF
+	ld hl, 0
+	; Hardware (UART) setup if using 18.43MHz clock
+	ld a, $80 
+	out (3), a			; SET DLAB
+	ld a, 1				; 115200 baud
+	out (0), a
+	ld a, 0
+	out (1), a        
+	ld a, 3
+	out (3), a          ; 8-bit serial, RESET DLAB
+	ld a, 1
+	out (2), a          ; enable FIFOs
+	
+	ld a, 0
+	call uart_send
+	ld hl, .msg
+	call print
+	jp term
+.msg: db "Nuclaer Tech ROM Monitor/BIOS",0
+term:
+	ld hl, kbdi
+	call input
+	
+	ld bc, 4   ; set space sep. to null for proper compare.
+	add hl, bc
+	ld (hl),0  ; No tokenizer!
+	or a
+	sbc hl, bc
+	
+	ld de, .helpcmd
+	call strcomp
+	jp z, .help
+	
+	ld de, .peekcmd
+	call strcomp
+	jp z, .peek
+	
+	call ostream
+	ld hl, .nocmd
+	call print
+	
+	jp term
+	.nocmd: db " is not a command.",0
+.help:
+	ld hl, .helpmsg
+	call print
+	jp term
+	.helpcmd: db "help",0
+	.helpmsg: db "COMMANDS:",13
+			db "  help   : display this help thing", 13
+			db "  peek a : inspect some memory", 13
+			db "  mod    : Bulk Memory Modify tool", 0
+.peek:
+	call input
+	jp term
+	.peekcmd: db "peek",0
+; uart_send - send A to UART
+uart_send:
+	push af
+.s:
+	in a, (5)
+	and a, 32
+	jr z, .s
+	pop af
+	out (0), a
+	ret
+; ostream - hl points to data to send
+ostream:
+	push af
+	push hl
+ostream_loop:
+	ld a, (hl)
+	or a
+	jp z, ostream_done
+	call uart_send
+	inc hl
+	jr ostream_loop
+ostream_done:
+	pop hl
+	pop af
+	ret
+
+; print - hl points to string to print on screen
+
+print:
+	call ostream
+	ld a, 13
+	call uart_send
+	ret
+; input_uart - receive string from UART and store it in HL
+input:
+	push hl
+.lopen:
+	in a, (5)
+	bit 0, a
+	jp z, .lopen
+	in a, (0)
+	cp 8
+	jp z, .delete
+	out (0), a
+	cp 13
+	jp z, .done
+	ld (hl), a
+	inc hl
+	jp .lopen
+.delete:
+	dec hl
+	ld a, 8
+	call uart_send
+	ld a, ' '
+	call uart_send
+	ld a, 8
+	call uart_send
+	jr .lopen
+.done:
+	xor a
+	ld (hl), a
+	pop hl
+	ret
+strcomp: 
+	push de
+	push hl
+.strcomp_l: 
+    ld a,(de) 
+    cp (hl) 
+    jp nz, .strcret    ;nz means they are not equal 
+    inc hl 
+    inc de 
+    or a       ;set the z flag if they're equal
+    jp nz, .strcomp_l
+.strcret:
+	pop hl
+	pop de
+	ret
+	
+; int_to_hex - convert HL into hex string
+int_to_hex:
+	push de
+	ex de, hl
+	ld hl, int2hexdata
+	push hl
+	ld a, d
+	call .c1
+	ld (hl), a
+	inc hl
+	ld a, d
+	call .c2
+	ld (hl), a
+	inc hl
+	ld a, e
+	call .c1
+	ld (hl), a
+	inc hl
+	ld a, e
+	call .c2
+	ld (hl), a
+	inc hl
+	xor a
+	ld (hl), a
+	pop hl
+	pop de
+	ret
+.c1:
+	rra
+	rra
+	rra
+	rra
+.c2:
+	or $F0
+	daa
+	add a, $A0
+	adc a, $40 ; Ascii hex at this point (0 to F)   
+	ret
+; len - get string length in bc
+len:
+	push de
+	push hl
+	ld a, 0
+	cpir
+	pop de
+	or a
+	sbc hl, de 
+	ld b, h
+	ld c, l
+	ld h, d
+	ld l, e
+	pop de
+	ret
+	
+rom_end:
+int2hexdata:
+kbdi: equ int2hexdata+5

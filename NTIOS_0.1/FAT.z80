@@ -1,0 +1,11 @@
+FAT:
+.OS_NAME: equ 3
+.RESERED_SECTORS: equ $E
+.FAT_COPIES: equ $10
+.ROOT_ENTRIES: equ $11
+.MEDIA: equ $15
+.EBS: equ $26
+.SERIAL_NUMBER: equ $27
+.LABEL: equ $2B
+.FS_TYPE: equ $36
+
