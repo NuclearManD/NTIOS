@@ -93,6 +93,8 @@ INCLUDE "uart.z80"
 INCLUDE "memory.z80"
 INCLUDE "keyboard.z80"
 INCLUDE "ssd.z80"
+INCLUDE "IDE.z80"
+INCLUDE "FAT.z80"
 cmd_help:          db "help", 0
 helpstr:           db "cls, mem, dir, reboot, open", 0
 terminal_pgm:
@@ -140,11 +142,16 @@ terminal_pgm:
 	call send
 	jr .loop
 .dir:
-	ld hl, 128
-	call alloc   ; alloc
-	call ssd_list_files
+	ld hl, $9000 ;512
+	;call alloc   ; alloc
+	ld bc, 0
+	ld de, 0
+	call ide_load
+	ld bc, FAT.OS_NAME
+	add hl, bc
+	;call ssd_list_files
 	call print
-	call rm_last ; free
+	;call rm_last ; free
 	jp .loop
 .mem:
 	ld a, '0'

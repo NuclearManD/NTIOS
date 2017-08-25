@@ -73,6 +73,7 @@ ide_drq_1:
 ; HL is where to load the sector
 ;***************************************************************************			
 ide_rd_sector:
+	push hl
 	LD 		A,1
 	OUT 	(ide_sectors),A					;Deal with only one sector at a time (512 bytes)
 	CALL	ide_drv_rdy				;Make sure drive is ready for command
@@ -93,6 +94,7 @@ ide_rd_sector:
 	LD 		(HL),A
 	INC 	HL
 	DJNZ 	.ide_RD_SECT
+	pop hl
 	RET
 	
 ;***************************************************************************

@@ -8,4 +8,5 @@ FAT:
 .SERIAL_NUMBER: equ $27
 .LABEL: equ $2B
 .FS_TYPE: equ $36
-
+read_word:
+	ret
