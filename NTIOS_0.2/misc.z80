@@ -4,16 +4,21 @@ dxdiag:  ; system diagnostic tool
 	call print
 	ld hl, .str_memck
 	call print
-	ld hl, (heap_top)
+	;ld hl, 0
+	;add hl, sp
+	;ld a, h
+	;sub 6
+	;ld d, a
+	ld hl, $A000
 .mlopen:
-	ld a, $55
+	ld a, $AA
 	ld (hl), a
 	ld a, (hl)
-	cp $55
+	cp $AA
 	jp nz, .memerr
 .next:
 	inc hl
-	ld a, $FF
+	ld a, $D0
 	cp h
 	jp z, .done1
 	jp .mlopen

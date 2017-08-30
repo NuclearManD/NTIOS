@@ -1,78 +1,22 @@
 ; alloc - allocate hl bytes of memory, hl returns its address.
 
 alloc:
-	ld a, h
-	cp 12
-	jp nc, .error1
-	ld de, (heap_top)
-	add hl, de           ; get the new heap top
-	ld a, $80
-	cp h
-	jp c, .error
-	ld (heap_top), hl    ; expand the heap
-	
-	push de              ; push the old heap top onto the stack 
-	
-	ld de, (heap_vars)
-	sla e
-    rl d
-	ld hl, heap_list
-	add hl, de           ; get where we are going to put the next heap_var
-	
-    push hl
-    pop de
-	ld (tmp), sp
-    ld hl, (tmp)
-	ldi                  ; store the value of the new heap var
-    ldi
-	
-	ld hl, heap_vars
-	inc (hl)             ; we now have one more heap var
-	
-	; hl now contains the address of the allocated space
-	pop hl
-    
-    ret
-.error:
-	ld hl, .err_msg
-	call ostream
-	ld hl, heap_top
-	ld de, (heap_top)
-	ld a, $90
-	ld (hl), a
-	inc hl
-	ld (hl), a
-	ex de, hl
-	call int_to_hex ; I hope this works here
-	jp system_error
-.err_msg: db "ERROR: heap top is at an invalid address:", 0
-.error1:
-	ld hl, .err2_msg
-	call print
-	pop hl
-	jp terminal_pgm.loop
-.err2_msg: db "Cannot allocate that much RAM. Exiting.", 0
-rm_last:
-	push bc
-	push hl
 	push de
+	ex de, hl ; save allocation size, we will need it
 	
-	ld hl, heap_list
-	ld de, (heap_vars) ; get pointer to last element in heap_vars array
-	dec de             ; de becomes source
-	sla e
-    rl d
+	ld hl, (heap_top)
+	ld a, h
+	or $80
+	ld h, a
+	push hl  ;  Heap top is new memory space, so save it
+	
 	add hl, de
+	ld (heap_top), hl ; add to heap_top
 	
-	ld de, heap_top ; hl is destination address
-	
-	ldi				; load
-	ldi
-	
-	pop de
 	pop hl
-	pop bc
+	pop de
 	ret
+
 bytes_free:
 	push de
 	ld de, (heap_top)
@@ -82,14 +26,12 @@ bytes_free:
 	sbc hl, de
 	pop de
 	ret
-
-
+rm_last:
+	ret
 memory_init:
 	push hl
-	ld hl, heap_bottom
+	ld hl, $9000
 	ld (heap_top),hl
-	ld hl, 0
-	ld (heap_vars),hl
 	pop hl
 	ret
 	
