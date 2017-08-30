@@ -13,14 +13,17 @@ strcomp:
 	pop hl
 	pop de
 	ret
-	
+
 ; int_to_hex - convert HL into hex string
 int_to_hex:
 	push de
-	ex de, hl
+	ld d, h
+	ld e, l
 	ld hl, 5
 	call alloc
 	push hl
+	ld h, d
+	ld l, e
 	ld a, d
 	call .c1
 	ld (hl), a
@@ -39,8 +42,39 @@ int_to_hex:
 	inc hl
 	xor a
 	ld (hl), a
+	inc hl
+	ld (hl), 0
 	pop hl
 	pop de
+	ret
+.c1:
+	rra
+	rra
+	rra
+	rra
+.c2:
+	or $F0
+	daa
+	add a, $A0
+	adc a, $40 ; Ascii hex at this point (0 to F)   
+	ret
+.tmp: db "XXXX",0
+; byte_to_hex - convert A into hex string
+byte_to_hex:
+	ex de, hl
+	ld hl, 3
+	call alloc
+	push hl
+	push af
+	call .c1
+	ld (hl), a
+	inc hl
+	pop af
+	call .c2
+	ld (hl), a
+	inc hl
+	ld (hl),0
+	pop hl
 	ret
 .c1:
 	rra
