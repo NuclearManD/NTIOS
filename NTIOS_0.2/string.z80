@@ -13,12 +13,6 @@ strcomp:
 	pop hl
 	pop de
 	ret
-div16:
-	srl a
-	srl a
-	srl a
-	srl a
-	ret
 hex_table:
 db "0123456789ABCDEF"
 ; int_to_hex - convert HL into hex string
@@ -27,23 +21,22 @@ int_to_hex:
 	ex de, hl
 	ld hl, 5
 	call alloc
-	ld hl, $8800 
 	push hl
 	ld a, d
-	call .div16
+	call div16
 	ld (hl), a
 	inc hl
 	ld a, d
-	call .and15
+	call and15
 	ld (hl), a
 	inc hl
 	ld a, e
 	
-	call .div16
+	call div16
 	ld (hl), a
 	inc hl
 	ld a, e
-	call .and15
+	call and15
 	ld (hl), a
 	inc hl
 	ld a, 0
@@ -51,12 +44,12 @@ int_to_hex:
 	pop hl
 	pop de
 	ret
-.div16:
+div16:
 	srl a
 	srl a
 	srl a
 	srl a
-.and15:
+and15:
 	and 15
 	push hl
 	push de
@@ -70,31 +63,24 @@ int_to_hex:
 	ret
 ; byte_to_hex - convert A into hex string
 byte_to_hex:
-	ex de, hl
-	ld hl, $8800;3
-	;call alloc
+	push bc
+	push de
+	ld hl, 3
+	ld b, a
+	call alloc 
 	push hl
-	push af
-	call .c1
+	ld a, b
+	call div16
 	ld (hl), a
 	inc hl
-	pop af
-	call .c2
+	ld a, b
+	call and15
 	ld (hl), a
 	inc hl
-	ld (hl),0
+	ld (hl), 0
 	pop hl
-	ret
-.c1:
-	rra
-	rra
-	rra
-	rra
-.c2:
-	or $F0
-	daa
-	add a, $A0
-	adc a, $40 ; Ascii hex at this point (0 to F)   
+	pop de
+	pop bc
 	ret
 ; len - get string length in bc
 len:

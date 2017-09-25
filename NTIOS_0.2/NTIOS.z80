@@ -62,6 +62,8 @@ os_start:
 	ld sp, stack_top
 	ld hl, 0
 	call memory_init
+	;ld a, 0x38
+	;call byte_to_hex
 	;ld hl, (heap_top)
 	;call int_to_hex
 	; Hardware (UART) setup if using 18.43MHz clock
