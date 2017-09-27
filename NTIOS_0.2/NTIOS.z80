@@ -139,17 +139,39 @@ terminal_pgm:
 	call strcomp
 	jp z, .open
 	
+	ld de, cmd_dawn
+	call strcomp
+	jp z, .dawn
+	
+	ld de, cmd_shelby
+	call strcomp
+	jp z, .shelby
+	
 	ld hl, no_cmd
 	call print
+	
+	
+	jp .loop
+.shelby:
+	ld hl, result_shelby
+	call print
+	ld a, l
+	out (0x90), a
+	jp .loop
+.dawn:
+	ld hl, result_dawn
+	call print
+	ld a, l
+	out (0x90), a
 	jp .loop
 .help:
 	ld hl, helpstr
     call print
-    jr .loop
+    jp .loop
 .cls:
 	ld a, 0
 	call send
-	jr .loop
+	jp .loop
 .dir:
 	;ld hl, $9000 ;512
 	;call alloc   ; alloc
@@ -210,6 +232,10 @@ cmd_dir:			db "dir", 0
 cmd_reboot:			db "reboot", 0
 cmd_open:			DB "open", 0
 cmd_dxdiag:			DB "dxdiag", 0
+cmd_shelby:			db "follower of the lemonist dictator",0
+cmd_dawn:			db "lemonist dictator",0
+result_shelby:		db "Shelby",0
+result_dawn:		db "Dawn",0
 no_cmd:            db "Command Not Found.", 0
 heap_top:      equ $8002
 tmp:           equ $8004
