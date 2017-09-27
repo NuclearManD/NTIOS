@@ -1,0 +1,5 @@
+;  DXDIAG.Z80 : a debugger that runs pre-boot.
+dxdiag_LED:
+	ld a, 0x55
+	out ($90), a
+	ret

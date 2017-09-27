@@ -1,0 +1,64 @@
+; uart_send - send A to UART
+uart_send:
+	push af
+.s:
+	in a, (5)
+	and a, 32
+	jr z, .s
+	pop af
+	out (0), a
+	ret
+; ostream - hl points to data to send
+ostream:
+	push af
+	push hl
+ostream_loop:
+	ld a, (hl)
+	or a
+	jp z, ostream_done
+	call uart_send
+	inc hl
+	jr ostream_loop
+ostream_done:
+	pop hl
+	pop af
+	ret
+
+; print - hl points to string to print on screen
+
+uart_print:
+	call ostream
+	ld a, 13
+	call uart_send
+	ret
+; input_uart - receive string from UART and store it in HL
+uart_input:
+	push hl
+.lopen:
+	in a, (5)
+	bit 0, a
+	jp z, .lopen
+	in a, (0)
+	cp 8
+	jp z, .delete
+	out (0), a
+	cp 13
+	jp z, .done
+	ld (hl), a
+	inc hl
+	jp .lopen
+.delete:
+	dec hl
+	ld a, 8
+	call send
+	ld a, ' '
+	call send
+	ld a, 8
+	call send
+	jr .lopen
+.done:
+	xor a
+	ld (hl), a
+	pop hl
+	ret
+	

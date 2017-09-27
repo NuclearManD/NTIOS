@@ -59,17 +59,16 @@ int38:          ; 0038, Z80 interrupt mode 1 vector
 	reti
 os_start:
 	di
+	call dxdiag_LED
 	ld sp, stack_top
 	ld hl, 0
 	call memory_init
-	;ld a, 0x38
-	;call byte_to_hex
 	;ld hl, (heap_top)
 	;call int_to_hex
 	; Hardware (UART) setup if using 18.43MHz clock
 	ld a, $80 
 	out (3), a			; SET DLAB
-	ld a, 10			; 115200 baud
+	ld a, 1				; 115200 baud
 	out (0), a
 	ld a, 0
 	out (1), a        
@@ -97,8 +96,7 @@ INCLUDE "uart.z80"
 INCLUDE "memory.z80"
 INCLUDE "keyboard.z80"
 INCLUDE "ssd.z80"
-INCLUDE "IDE.z80"
-INCLUDE "FAT.z80"
+INCLUDE "dxdiag.z80"
 INCLUDE "misc.z80"
 cmd_help:          db "help", 0
 helpstr:           db "cls, mem, dir, reboot, open", 0
@@ -160,9 +158,9 @@ terminal_pgm:
 	;ld hl, $9000
 	;add hl, bc
 	;call ssd_list_files
-	IN		A, (ide_status)
-	call byte_to_hex
-	call print
+	;IN		A, (ide_status)
+	;call byte_to_hex
+	;call print
 	;call rm_last ; free
 	jp .loop
 .mem:

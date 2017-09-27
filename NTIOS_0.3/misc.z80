@@ -4,15 +4,12 @@ dxdiag:  ; system diagnostic tool
 	call print
 	ld hl, .str_memck
 	call print
-	ld hl, 0
-	add hl, sp
-	ld a, l
-	sub 6
-	ld l, a
-	ld a, (heap_top+1)
-	inc a
-	ld d, a
-	;ld hl, $A000
+	;ld hl, 0
+	;add hl, sp
+	;ld a, h
+	;sub 6
+	;ld d, a
+	ld hl, $A000
 .mlopen:
 	ld a, $AA
 	ld (hl), a
@@ -20,8 +17,8 @@ dxdiag:  ; system diagnostic tool
 	cp $AA
 	jp nz, .memerr
 .next:
-	dec hl
-	ld a, d
+	inc hl
+	ld a, $D0
 	cp h
 	jp z, .done1
 	jp .mlopen
@@ -32,37 +29,18 @@ dxdiag:  ; system diagnostic tool
 .done1:
 	ld hl, .str2
 	call print
-	ld hl, 0x1152
+	ld hl, 0xFFFF
 	call int_to_hex
 	call ostream
-	ld a, 0x00
-	call byte_to_hex
-	call ostream
-	ld a, 0x85
-	call byte_to_hex
-	
+	ld hl, 0x0000
+	call int_to_hex
 	call print
-	call .wait
-	ld hl, .diskstatus
-	call ostream
-	in a, ($80)
-	call byte_to_hex
-	call print
-	ld hl, .diskerr
-	call ostream
-	in a, ($8F)
-	call byte_to_hex
-	call print
-	ret
-.wait:
 	ld hl, .anykey
 	call print
 	call input
 	ret
 .str1:		db "Hello.",13,"This is the auto-debugger",0
-.str2:		db "The next line should contain '11520085'",0
+.str2:		db "The next line should contain 'FFFF0000'",0
 .str_memck:	db "Testing RAM...",0
 .memerr_msg:db "Memory Error!",0
 .anykey:	db "Press the enter key to continue.",0
-.diskstatus:db "Drive status byte: 0x",0
-.diskerr:	db "Drive error byte: 0x",0
