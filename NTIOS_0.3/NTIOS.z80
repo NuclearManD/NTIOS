@@ -17,8 +17,8 @@ stack_top:     equ $FFFF
 
 ide_port:      equ $8
 keyboard_port: equ $20 ; where is the keyboard in IO land?
-
-
+text_rows:		equ 20
+free_text_rows:	equ text_rows-3
 vectors:
 	jp os_start ; 0000 (reboot)
 	jp ostream  ; 0003
@@ -96,10 +96,11 @@ INCLUDE "uart.z80"
 INCLUDE "memory.z80"
 INCLUDE "keyboard.z80"
 INCLUDE "ssd.z80"
+INCLUDE "ui.z80"
 INCLUDE "dxdiag.z80"
 INCLUDE "misc.z80"
 cmd_help:          db "help", 0
-helpstr:           db "cls, mem, reboot, in, out", 0
+helpstr:           db "cls, mem, reboot, in, out, peek, poke, inspect", 0
 terminal_pgm:
 	ld hl, term_start_string   ; pleasantly start the terminal
 	call print
@@ -127,7 +128,19 @@ terminal_pgm:
 	
 	ld de, cmd_in
 	call strcomp
-	jr z, .in
+	jp z, .in
+	
+	ld de, cmd_peek
+	call strcomp
+	jp z, .peek
+	
+	ld de, cmd_poke
+	call strcomp
+	jp z, .poke
+	
+	ld de, cmd_inspect
+	call strcomp
+	jp z, .inspect
 	
 	ld de, cmd_reboot
 	call strcomp
@@ -204,6 +217,42 @@ terminal_pgm:
 .dxdiag:  ; Diagnostic Program
 	call dxdiag
 	jp .loop
+.peek:
+	ld hl, .instr
+	call ostream
+    ld hl, term_kbd_buff
+	call input
+	call hex_to_int
+	ld hl, .outstr
+	call ostream
+	ld a, (de)
+	call byte_to_hex
+	call print
+	jp .loop
+.poke:
+	ld hl, .instr
+	call ostream
+    ld hl, term_kbd_buff
+	call input
+	call hex_to_int
+	ld hl, .outstr
+	call ostream
+    ld hl, term_kbd_buff
+	call input
+	call hex_to_byte
+	ex de, hl
+	ld (hl),a
+	jp .loop
+.inspect:
+	ld hl, .instr
+	call ostream
+    ld hl, term_kbd_buff
+	call input
+	call hex_to_int
+	ld h, d
+	ld l, e
+	call print_memory
+	jp .loop
 .bytes_str: db " Bytes", 0
 term_start_string: db "NTIOS 0.3", 0
 term_cursor:       db "# ", 0
@@ -211,6 +260,9 @@ cmd_mem:           db "mem", 0
 cmd_cls:           db "cls", 0
 cmd_out:           db "out", 0
 cmd_in:           db "in", 0
+cmd_peek:			db "peek",0
+cmd_poke:			db "poke",0
+cmd_inspect:		db "inspect",0
 cmd_reboot:			db "reboot", 0
 cmd_dxdiag:			DB "dxdiag", 0
 no_cmd:            db "Command Not Found.", 0

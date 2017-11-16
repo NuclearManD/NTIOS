@@ -20,7 +20,7 @@ div16:
 	srl a
 	ret
 hex_table:
-db "0123456789ABCDEF"
+db "0123456789ABCDEF",0
 ; int_to_hex - convert HL into hex string
 int_to_hex:
 	push de
@@ -115,10 +115,10 @@ hex_to_byte:
 	ld a, (hl)
 	sub 87
 	jr nc, .n
-	add 49
+	add 39
 .n:
-	pop hl
 	ret
+; uint16_t hex_to_int(uint8_t* hl)->de
 hex_to_int:
 	push hl
 	call hex_to_byte
