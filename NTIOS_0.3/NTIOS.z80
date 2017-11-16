@@ -99,7 +99,7 @@ INCLUDE "ssd.z80"
 INCLUDE "dxdiag.z80"
 INCLUDE "misc.z80"
 cmd_help:          db "help", 0
-helpstr:           db "cls, mem, dir, reboot, open", 0
+helpstr:           db "cls, mem, reboot, in, out", 0
 terminal_pgm:
 	ld hl, term_start_string   ; pleasantly start the terminal
 	call print
@@ -125,17 +125,17 @@ terminal_pgm:
 	call strcomp
 	jr z, .mem
 	
-	ld de, cmd_dir
+	ld de, cmd_in
 	call strcomp
-	jr z, .dir
+	jr z, .in
 	
 	ld de, cmd_reboot
 	call strcomp
 	jp z, reboot
 	
-	ld de, cmd_open
+	ld de, cmd_out
 	call strcomp
-	jp z, .open
+	jp z, .out
 	
 	ld hl, no_cmd
 	call print
@@ -148,20 +148,6 @@ terminal_pgm:
 	ld a, 0
 	call send
 	jr .loop
-.dir:
-	;ld hl, $9000 ;512
-	;call alloc   ; alloc
-	;ld bc, 0
-	;ld de, 0
-	;call ide_load
-	;ld bc, FAT.OS_NAME
-	;ld hl, $9000
-	;add hl, bc
-	;call ssd_list_files
-	;IN		A, (ide_status)
-	;call byte_to_hex
-	;call print
-	;call rm_last ; free
 	jp .loop
 .mem:
 	ld a, '0'
@@ -184,29 +170,48 @@ terminal_pgm:
 	;call rm_last ; free bytes allocated by call to int_to_hex
 	call rm_last ; free bytes allocated by call to int_to_hex
 	jp .loop
-.open:
-	ld a, '>'
-	call send
-	ld hl, (term_kbd_buff)
+.out:
+	ld hl, .instr
+	call ostream
+    ld hl, term_kbd_buff
 	call input
-	ld a, 1
-	call ssd_open
-	call ssd_read
-	call print
-	call rm_last
-	call rm_last
+	call hex_to_int
+	ld b, d
+	ld c, e
+	ld hl, .outstr
+	call ostream
+    ld hl, term_kbd_buff
+	call input
+	call hex_to_byte
+	out (c), a
 	jp .loop
+.outstr: db "Data > ", 0
+.in:
+	ld hl, .instr
+	call ostream
+    ld hl, term_kbd_buff
+	call input
+	call hex_to_int
+	ld b, d
+	ld c, e
+	ld hl, .outstr
+	call ostream
+	in a, (c)
+	call byte_to_hex
+	call print
+	jp .loop
+.instr: db "Address > ", 0
 .dxdiag:  ; Diagnostic Program
 	call dxdiag
 	jp .loop
 .bytes_str: db " Bytes", 0
-term_start_string: db "NTIOS 0.1", 0
+term_start_string: db "NTIOS 0.3", 0
 term_cursor:       db "# ", 0
 cmd_mem:           db "mem", 0
 cmd_cls:           db "cls", 0
-cmd_dir:			db "dir", 0
+cmd_out:           db "out", 0
+cmd_in:           db "in", 0
 cmd_reboot:			db "reboot", 0
-cmd_open:			DB "open", 0
 cmd_dxdiag:			DB "dxdiag", 0
 no_cmd:            db "Command Not Found.", 0
 heap_top:      equ $8002

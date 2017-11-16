@@ -96,6 +96,39 @@ byte_to_hex:
 	add a, $A0
 	adc a, $40 ; Ascii hex at this point (0 to F)   
 	ret
+hex_to_byte:
+	push hl
+	push bc
+	call .sub
+	sla a
+	sla a
+	sla a
+	sla a
+	ld b, a
+	inc hl
+	call .sub
+	or b
+	pop bc
+	pop hl
+	ret
+.sub:
+	ld a, (hl)
+	sub 87
+	jr nc, .n
+	add 49
+.n:
+	pop hl
+	ret
+hex_to_int:
+	push hl
+	call hex_to_byte
+	ld d, a
+	inc hl
+	inc hl
+	call hex_to_byte
+	ld e, a
+	pop hl
+	ret
 ; len - get string length in bc
 len:
 	push de
@@ -111,4 +144,3 @@ len:
 	ld l, e
 	pop de
 	ret
-	
