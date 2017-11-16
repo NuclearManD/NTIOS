@@ -1,0 +1,86 @@
+; BIOS.Z80 : Z80 bios to load OS, do config stuff, and much more.
+di
+ld sp, stack_top
+ld hl, 0
+;ld hl, (heap_top)
+;call int_to_hex
+; Hardware (UART) setup if using 18.43MHz clock
+ld a, $80 
+out (3), a			; SET DLAB
+ld a, 1				; 115200 baud
+out (0), a
+ld a, 0
+out (1), a        
+ld a, 3
+out (3), a          ; 8-bit serial, RESET DLAB
+ld a, 1
+out (2), a          ; enable FIFOs
+
+ld a, 0
+call uart_send
+
+ld hl, BIOSMSG
+call uart_print
+call ide_init
+ld hl, ideinit_2term
+call uart_print
+ld a, (CONFIG)
+or a
+jp z, reconfig
+and a, 1
+jp z, load_dskos	; we're loading an OS from the disk... If found, of course.
+load_cpm:			; Nope, loading CPM instead.
+	jp $			; TODO: load CPM here
+load_dskos:
+	ld hl, 512
+	call alloc
+	ld bc, 0
+	ld de, 0
+	call ide_load
+	ld bc, 3;FAT.OS_NAME
+	add hl, bc
+
+; uart_send - send A to UART
+uart_send:
+	push af
+.s:
+	in a, (5)
+	and a, 32
+	jr z, .s
+	pop af
+	out (0), a
+	ret
+; ostream - hl points to data to send
+ostream:
+	push af
+	push hl
+ostream_loop:
+	ld a, (hl)
+	or a
+	jp z, ostream_done
+	call uart_send
+	inc hl
+	jr ostream_loop
+ostream_done:
+	pop hl
+	pop af
+	ret
+
+; print - hl points to string to print on screen
+
+uart_print:
+	call ostream
+	ld a, 13
+	call uart_send
+	ret
+; input_uart - receive string from UART and store it in HL
+uart_getkey:
+	in a, (5)
+	bit 0, a
+	jp z, uart_getkey
+	in a, (0)
+	ret
+INCLUDE "IDE.z80"
+BIOSMSG:		db "Nuclaer Tech Z80 BIOS 1.0 Starting",0
+ideinit_2term:	db "CF initialized.  Please wait...",0
+CONFIG: db 0

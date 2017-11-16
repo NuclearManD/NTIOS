@@ -1,0 +1,46 @@
+;  MISC.Z80 : Does random system stuff.
+dxdiag:  ; system diagnostic tool
+	ld hl, .str1
+	call print
+	ld hl, .str_memck
+	call print
+	;ld hl, 0
+	;add hl, sp
+	;ld a, h
+	;sub 6
+	;ld d, a
+	ld hl, $A000
+.mlopen:
+	ld a, $AA
+	ld (hl), a
+	ld a, (hl)
+	cp $AA
+	jp nz, .memerr
+.next:
+	inc hl
+	ld a, $D0
+	cp h
+	jp z, .done1
+	jp .mlopen
+.memerr:
+	ld hl, .memerr_msg
+	call print
+	jp .next
+.done1:
+	ld hl, .str2
+	call print
+	ld hl, 0xFFFF
+	call int_to_hex
+	call ostream
+	ld hl, 0x0000
+	call int_to_hex
+	call print
+	ld hl, .anykey
+	call print
+	call input
+	ret
+.str1:		db "Hello.",13,"This is the auto-debugger",0
+.str2:		db "The next line should contain 'FFFF0000'",0
+.str_memck:	db "Testing RAM...",0
+.memerr_msg:db "Memory Error!",0
+.anykey:	db "Press the enter key to continue.",0
