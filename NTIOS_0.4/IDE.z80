@@ -1,0 +1,267 @@
+;***************************************************************************
+;  PROGRAM:			ideDriver        
+;  PURPOSE:			Subroutines for a ide Card
+;  ASSEMBLER:		TASM 3.2        
+;  LICENCE:			The MIT Licence
+;  AUTHOR :			MCook
+;  CREATE DATE :	19 June 15
+; Modified by Dylan Brophy 17/6/28
+;***************************************************************************
+
+;The addresses that the ide Card resides in I/O space.
+;Change to suit hardware.
+ide_port:		EQu $80
+ide_data:		EQU	ide_port + $00		; Data (R/W)
+ide_error:		EQU	ide_port + $01		; Error register (R)
+ide_features:	EQU	ide_port + $01		; Features (W)
+ide_sectors:	EQU	ide_port + $02		; Sector count (R/W)
+ide_LBA0:		EQU	ide_port + $03		; LBA bits 0-7 (R/W, _LBA mode)
+ide_LBA1:		EQU	ide_port + $04		; LBA bits 8-15 (R/W, _LBA mode)
+ide_LBA2:		EQU	ide_port + $05		; LBA bits 16-23 (R/W, _LBA mode)
+ide_LBA3:		EQU	ide_port + $06		; LBA bits 24-27 (R/W, _LBA mode)
+ide_status:		EQU	ide_port + $07		; Status (R)
+ide_cmd:		EQU	ide_port + $07		; Command (W)	
+
+;***************************************************************************
+;ide_init
+;Function: Initialize ide to 8 bit data transfer mode
+; THROWS DISK_ERROR
+;***************************************************************************	
+db 0, "ide_init",0
+ide_init:
+	call ide_reset
+	CALL	ide_wait_rdy
+	LD		A,$01						;LD features register to enable 8 bit
+	OUT		(ide_features),A
+	jp .e1
+	db 0, "ide_init.e1",0
+.e1:
+	CALL	ide_wait_rdy
+	LD		A,$EF						;Send set features command
+	OUT		(ide_cmd),A
+	jp .e2
+	db 0, "ide_init.e2",0
+.e2:
+	CALL	ide_wait_rdy
+	RET
+ide_rd_status:
+	IN		A,(ide_status)					;Read status
+	push af
+	and 1
+	jp nz, .error
+	pop af
+	ret
+.error:
+	jp .e1
+db 0,"ide_rd_status.e1",0 
+.e1:
+	call throw_drive_error
+	; No ret because throw doesn't return to here.
+
+;***************************************************************************
+;ide_wait_rdy
+;Function: Loops until status register bit 7 (busy) is 0
+; THROWS DISK_ERROR
+;***************************************************************************	
+db 0, "ide_wait_rdy",0
+ide_wait_rdy:
+	call ide_rd_status
+	AND		%10000000					;Mask busy bit
+	JP		NZ,ide_wait_rdy				;Loop until busy(7) is 0
+	RET
+
+;***************************************************************************
+;ide_drv_rdy
+;Function: Loops until status register bit 7 (busy) is 0 and drvrdy(6) is 1
+; THROWS DISK_ERROR
+;***************************************************************************	
+db 0, "ide_drv_rdy",0
+ide_drv_rdy:
+	call ide_rd_status
+	AND		%11000000					;mask off busy and rdy bits
+	XOR		%01000000					;we want busy(7) to be 0 and drvrdy(6) to be 1
+	JP		NZ,ide_drv_rdy
+	RET
+
+;***************************************************************************
+;ide_drq_1
+;Function: Loops until status register bit 7 (busy) is 0 and drq(3) is 1
+; THROWS DISK_ERROR
+;***************************************************************************
+db 0, "ide_drq_1",0		
+ide_drq_1:
+	call ide_rd_status
+	AND		%10001000					;mask off busy and drq bits
+	XOR		%00001000					;we want busy(7) to be 0 and drq(3) to be 1
+	JP		NZ,ide_drq_1
+	RET
+	
+;***************************************************************************
+;ide_rd_sector
+;Function: Gets a sector (512 bytes) into RAM buffer.
+; HL is where to load the sector
+;***************************************************************************			
+ide_rd_sector:
+	push hl
+	OUT 	(ide_sectors),A					;Deal with # of sectors in a
+	jp .e1
+	db 0, "ide_rd_sector.e1",0
+.e1:
+	CALL	ide_drv_rdy				;Make sure drive is ready for command
+	LD		A,$20						;Prepare read command
+	OUT		(ide_cmd),A					;Send read command
+	push hl
+.tryagain:
+	ld hl, .tryagain
+	call try
+	CALL	ide_drq_1				;Wait until data is ready to be read
+	call notry
+	LD 		B,0							;read 256 words (512 bytes per sector)
+	pop hl
+.ide_RD_SECT:
+	jp .e3
+	db 0, "ide_rd_sector.e3",0
+.e3:
+	CALL	ide_drq_1	
+	IN 		A,(ide_data)					;get byte of ide data	
+	LD 		(HL),A
+	INC 	HL
+	jp .e4
+	db 0, "ide_rd_sector.e4",0
+.e4:
+	CALL	ide_drq_1
+	IN 		A,(ide_data)					;get byte of ide data	
+	LD 		(HL),A
+	INC 	HL
+	DJNZ 	.ide_RD_SECT
+	pop hl
+	RET
+;***************************************************************************
+;ide_wr_sector
+;Function: Writes a sector (512 bytes) into CF card
+; HL is where to get the sector
+;***************************************************************************			
+ide_wr_sector:
+	push hl
+	OUT 	(ide_sectors),A					;Deal with # of sectors in a
+	jp .e1
+	db 0, "ide_wr_sector.e1",0
+.e1:
+	CALL	ide_drv_rdy				;Make sure drive is ready for command
+	LD		A,$30						;Prepare write command
+	OUT		(ide_cmd),A					;Send write command
+	push hl
+.tryagain:
+	ld hl, .tryagain
+	call try
+	CALL	ide_drq_1				;Wait until data is ready to be written
+	call notry
+	LD 		B,0							;write 256 words (512 bytes per sector)
+	pop hl
+.ide_WR_SECT:
+	jp .e3
+	db 0, "ide_wr_sector.e3",0
+.e3:
+	CALL	ide_drq_1	
+	LD 		(HL),A
+	out		(ide_data),a					;get byte of ide data	
+	INC 	HL
+	jp .e4
+	db 0, "ide_wr_sector.e4",0
+.e4:
+	CALL	ide_drq_1
+	LD 		a,(HL)
+	out		(ide_data),a					;get byte of ide data	
+	INC 	HL
+	DJNZ 	.ide_WR_SECT
+	pop hl
+	RET
+	
+;***************************************************************************
+;ide_load
+;Function: set LBA address and get 512 bytes from drive
+; bc is lower word of address
+; de is upper word of address
+; hl is where to put the sector
+;***************************************************************************
+ide_load:
+	push hl
+	push de
+	push bc
+	jp .e1
+	db 0, "ide_load.e1",0
+.e1:
+	call ide_set_adr
+	ld a, 1 ; one sector
+	jp .e2
+	db 0, "ide_load.e2",0
+.e2:
+	CALL	ide_rd_sector
+	pop bc
+	pop de
+	pop hl
+	RET
+;***************************************************************************
+;ide_store
+;Function: set LBA address and write 512 bytes to drive
+; bc is lower word of address
+; de is upper word of address
+; hl is where to put the sector
+;***************************************************************************
+ide_store:
+	push hl
+	push de
+	push bc
+	jp .e1
+	db 0, "ide_store.e1",0
+.e1:
+	call ide_set_adr
+	ld a, 1 ; one sector
+	jp .e4
+	db 0, "ide_store.e4",0
+.e4:
+	CALL	ide_wr_sector
+	pop bc
+	pop de
+	pop hl
+	RET
+;***************************************************************************
+;ide_set_adr
+;Function: set LBA address
+; bc is lower word of address
+; de is upper word of address
+;***************************************************************************
+ide_set_adr:
+	push de
+	push bc
+	LD      A,c
+	OUT		(ide_LBA0),A					;_LBA 0:7
+	jp .e1
+	db 0, "ide_set_adr.e1",0
+.e1:
+	CALL 	ide_wait_rdy
+	LD      A,b
+	OUT		(ide_LBA1),A					;_LBA 8:15
+	jp .e2
+	db 0, "ide_set_adr.e2",0
+.e2:
+	CALL 	ide_wait_rdy
+	LD      A,e
+	OUT 	(ide_LBA2),A					;_LBA 16:23
+	jp .e3
+	db 0, "ide_set_adr.e3",0
+.e3:
+	CALL 	ide_wait_rdy
+	LD 		A,d								;Selects ide as master
+	and A, 15
+	or A, $E0
+	OUT 	(ide_LBA3),A					;_LBA 24:27 + DRV 0 selected + bits 5:7=111
+	pop bc
+	pop de
+	RET
+ide_reset:
+	;ld a, 8
+	;out (ide_cmd), a
+	ret
+	
+	

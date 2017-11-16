@@ -1,0 +1,338 @@
+org 0
+ld sp, 0xFFFF
+	ld hl, 0
+	call memory_init
+	;ld hl, (heap_top)
+	;call int_to_hex
+	; Hardware (UART) setup if using 18.43MHz clock
+	ld a, $80 
+	out (3), a			; SET DLAB
+	ld a, 10			; 115200 baud
+	out (0), a
+	ld a, 0
+	out (1), a        
+	ld a, 3
+	out (3), a          ; 8-bit serial, RESET DLAB
+	ld a, 1
+	out (2), a          ; enable FIFOs
+ld a, 13
+call send
+waiting:
+	in a, (0x87)
+	push af
+	and 1
+	jp nz, ERR
+	pop af
+	and 0x80
+	jp nz, waiting
+ld hl, done_waiting
+call uart_print
+in a, (0x87)
+call byte_to_hex
+call uart_print
+ld a, 0xEF
+out (0x87), a
+ld a, 0x82
+out (0x81), a
+ld a, 0xEF
+out (0x87), a
+
+ld hl, loading
+ld a, l
+and 0xF8
+ld e, a
+ld a, l
+and 7
+ld d, a
+
+waiting2:
+
+	ld a, (hl)
+	call uart_send
+	inc hl
+	ld a, 7
+	and l
+	or e
+	add d
+	ld l, a
+	ld a, 8
+	call uart_send
+	
+	in a, (0x87)
+	and a, 0xC0
+	sub 0x40
+	jp nz, waiting2
+ld a, 1
+out (0x82),a
+ld a, 0
+out (0x83),a
+out (0x84),a
+out (0x85),a
+or 0x80
+out (0x86),a
+ld a, 0x30
+out (0x87),a
+waiting3:
+	
+	in a, (0x87)
+	and a, 0x88
+	sub 0x08
+	jp nz, waiting3
+ld hl, hello_
+ld bc, 512
+lopen0:
+	ld a, (hl)
+	inc l
+	out (0x80),a
+	dec bc
+	ld a, b
+	or c
+	jr nz, lopen0
+
+
+waiting4:
+	in a, (0x87)
+	and a, 0xC0
+	sub 0x40
+	jp nz, waiting4
+ld a, 1
+out (0x82),a
+ld a, 0
+out (0x83),a
+out (0x84),a
+out (0x85),a
+or 0x80
+out (0x86),a
+ld a, 0x20
+out (0x87),a
+waiting5:
+	in a, (0x87)
+	and a, 0x88
+	sub 0x08
+	jp nz, waiting5
+ld hl, 0x9000
+ld bc, 512
+lopen1:
+	inc l
+	in a,(0x80)
+	ld (hl), a
+	dec bc
+	ld a, b
+	or c
+	jr nz, lopen1
+	
+ld hl, 0x9000
+call uart_print
+jp $
+ERR:
+	ld hl, errormsg
+	call uart_print
+	in a, (0x81)
+	call byte_to_hex
+	call uart_print
+	jp $
+errormsg: db "---DRIVE ERROR---",0
+done_waiting: db "IDE READY:",0
+loading: db "/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-\|/-"
+; alloc - allocate hl bytes of memory, hl returns its address.
+
+alloc:
+	push de
+	ex de, hl ; save allocation size, we will need it
+	
+	ld hl, (heap_top)
+	ld a, h
+	or $80
+	ld h, a
+	push hl  ;  Heap top is new memory space, so save it
+	
+	add hl, de
+	ld (heap_top), hl ; add to heap_top
+	
+	pop hl
+	pop de
+	ret
+
+bytes_free:
+	push de
+	ld de, (heap_top)
+	ld hl, 0
+	add hl, sp
+	or a
+	sbc hl, de
+	pop de
+	ret
+rm_last:
+	ret
+memory_init:
+	push hl
+	ld hl, $8800
+	ld (heap_top),hl
+	pop hl
+	ret
+strcomp: 
+	push de
+	push hl
+.strcomp_l: 
+    ld a,(de) 
+    cp (hl) 
+    jp nz, .strcret    ;nz means they are not equal 
+    inc hl 
+    inc de 
+    or a       ;set the z flag if they're equal
+    jp nz, .strcomp_l
+.strcret:
+	pop hl
+	pop de
+	ret
+hex_table:
+db "0123456789ABCDEF"
+hello_: db  "Khalo le monden!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!",0
+; int_to_hex - convert HL into hex string
+int_to_hex:
+	push de
+	ex de, hl
+	ld hl, 5
+	call alloc
+	push hl
+	ld a, d
+	call div16
+	ld (hl), a
+	inc hl
+	ld a, d
+	call and15
+	ld (hl), a
+	inc hl
+	ld a, e
+	
+	call div16
+	ld (hl), a
+	inc hl
+	ld a, e
+	call and15
+	ld (hl), a
+	inc hl
+	ld a, 0
+	ld (hl), 0
+	pop hl
+	pop de
+	ret
+div16:
+	srl a
+	srl a
+	srl a
+	srl a
+and15:
+	and 15
+	push hl
+	push de
+	ld hl, hex_table
+	ld d, 0
+	ld e, a
+	add hl, de
+	ld a, (hl)
+	pop de
+	pop hl
+	ret
+; byte_to_hex - convert A into hex string
+byte_to_hex:
+	push bc
+	push de
+	ld hl, 3
+	ld b, a
+	call alloc 
+	push hl
+	ld a, b
+	call div16
+	ld (hl), a
+	inc hl
+	ld a, b
+	call and15
+	ld (hl), a
+	inc hl
+	ld (hl), 0
+	pop hl
+	pop de
+	pop bc
+	ret
+; len - get string length in bc
+len:
+	push de
+	push hl
+	ld a, 0
+	cpir
+	pop de
+	or a
+	sbc hl, de 
+	ld b, h
+	ld c, l
+	ld h, d
+	ld l, e
+	pop de
+	ret
+; uart_send - send A to UART
+uart_send:
+	push af
+.s:
+	in a, (5)
+	and a, 32
+	jr z, .s
+	pop af
+	out (0), a
+	ret
+; ostream - hl points to data to send
+ostream:
+	push af
+	push hl
+ostream_loop:
+	ld a, (hl)
+	or a
+	jp z, ostream_done
+	call uart_send
+	inc hl
+	jr ostream_loop
+ostream_done:
+	pop hl
+	pop af
+	ret
+
+; print - hl points to string to print on screen
+
+uart_print:
+	call ostream
+	ld a, 13
+	call uart_send
+	ret
+; input_uart - receive string from UART and store it in HL
+uart_input:
+	push hl
+.lopen:
+	in a, (5)
+	bit 0, a
+	jp z, .lopen
+	in a, (0)
+	cp 8
+	jp z, .delete
+	out (0), a
+	cp 13
+	jp z, .done
+	ld (hl), a
+	inc hl
+	jp .lopen
+.delete:
+	dec hl
+	ld a, 8
+	call send
+	ld a, ' '
+	call send
+	ld a, 8
+	call send
+	jr .lopen
+.done:
+	xor a
+	ld (hl), a
+	pop hl
+	ret
+heap_top: equ 0x9000
+send:  equ uart_send  ; send chars to?
+heap_vars: equ 0x8000

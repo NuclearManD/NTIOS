@@ -7,18 +7,19 @@
 org $0000
 ; CONFIGURATION
 print: equ uart_print ; send text data where?
+printnl: equ ostream
 input: equ uart_input ; get user input from?
 send:  equ uart_send  ; send chars to?
+rec_char: equ uart_rec
 reboot: equ os_start
 
-ssd_writable: equ 1
 stack_top:     equ $FFFF
 
 
 ;ide_port:      equ $8
 keyboard_port: equ $20 ; where is the keyboard in IO land?
-text_rows:		equ 20
-free_text_rows:	equ text_rows-3
+
+
 vectors:
 	jp os_start ; 0000 (reboot)
 	jp ostream  ; 0003
@@ -79,9 +80,25 @@ os_start:
 	ld a, 0
 	call uart_send
 	call memory_init
+	call os_setup_tracer
+	;call list_files
 	ld hl, .meminit_2ide
 	call print
+	
+	ld hl, .diskerror
+	call try
+	
+	jp .e1
+db 0,"os_start.e1",0
+.e1:
 	call ide_init
+	jp .e2
+db 0,"os_start.e2",0
+.e2:
+	;call FAT_setup
+	
+	call notry
+.disk_err_ret:
 	ld hl, .ideinit_2term
 	call print
 	
@@ -89,9 +106,15 @@ os_start:
 	ei
 	
 	jp terminal_pgm     ; start terminal program! WOOO!
+.diskerror:
+	ld hl, .diskerr_str
+	call print
+	jp .disk_err_ret
 .meminit_2ide: db "Memory Allocation loaded.  Starting CF driver...",0
 .ideinit_2term: db "CF initialized.  Starting terminal...",0
+.diskerr_str: db  "Error while starting CF drivers. DO NOT USE disk/drive commands.",0
 system_error:
+	call traceback
 	call print
 	ld hl, .msg
 	call print
@@ -102,13 +125,13 @@ INCLUDE "string.z80"
 INCLUDE "uart.z80"
 INCLUDE "memory.z80"
 INCLUDE "keyboard.z80"
-INCLUDE "ssd.z80"
-INCLUDE "ui.z80"
 INCLUDE "IDE.z80"
+INCLUDE "FAT.z80"
 INCLUDE "dxdiag.z80"
 INCLUDE "misc.z80"
+INCLUDE "traceback.z80"
 cmd_help:          db "help", 0
-helpstr:           db "cls, mem, reboot, in, out, peek, poke, inspect", 0
+helpstr:           db "cls, mem, dir, reboot, di, dxdiag", 0
 terminal_pgm:
 	ld hl, term_start_string   ; pleasantly start the terminal
 	call print
@@ -134,29 +157,21 @@ terminal_pgm:
 	call strcomp
 	jr z, .mem
 	
-	ld de, cmd_in
+	ld de, cmd_dir
 	call strcomp
-	jp z, .in
-	
-	ld de, cmd_peek
-	call strcomp
-	jp z, .peek
-	
-	ld de, cmd_poke
-	call strcomp
-	jp z, .poke
-	
-	ld de, cmd_inspect
-	call strcomp
-	jp z, .inspect
+	jr z, .dir
 	
 	ld de, cmd_reboot
 	call strcomp
 	jp z, reboot
 	
-	ld de, cmd_out
+	ld de, cmd_di
 	call strcomp
-	jp z, .out
+	jp z, .di
+	
+	ld de, cmd_format
+	call strcomp
+	jp z, .format
 	
 	ld hl, no_cmd
 	call print
@@ -168,6 +183,16 @@ terminal_pgm:
 .cls:
 	ld a, 0
 	call send
+	jr .loop
+.dir:
+	ld hl, .loop
+	call try
+	jp .e1
+	db 0,"terminal_pgm.e1",0
+.e1:
+	call list_files
+	call print
+	call notry
 	jp .loop
 .mem:
 	ld a, '0'
@@ -179,107 +204,57 @@ terminal_pgm:
 	call ostream
 	ld hl, .bytes_str
 	call print
-	;ld hl, (heap_top)
-	;call int_to_hex
-	;call print
-	;ld hl, 0
-	;add hl, sp
-	;call int_to_hex
-	;call print
-	;call rm_last ; free bytes allocated by call to int_to_hex
-	;call rm_last ; free bytes allocated by call to int_to_hex
-	call rm_last ; free bytes allocated by call to int_to_hex
 	jp .loop
-.out:
-	ld hl, .instr
-	call ostream
-    ld hl, term_kbd_buff
-	call input
-	call hex_to_int
-	ld b, d
-	ld c, e
-	ld hl, .outstr
-	call ostream
-    ld hl, term_kbd_buff
-	call input
-	call hex_to_byte
-	out (c), a
-	jp .loop
-.outstr: db "Data > ", 0
-.in:
-	ld hl, .instr
-	call ostream
-    ld hl, term_kbd_buff
-	call input
-	call hex_to_int
-	ld b, d
-	ld c, e
-	ld hl, .outstr
-	call ostream
-	in a, (c)
-	call byte_to_hex
+.di:
+	ld hl, disk_name_str
+	call print
+	ld hl, (fs_s0)
+	ld bc, 0
+	ld de, 0
+	call ide_load
+	ld hl, (fs_s0+FAT.LABEL)
 	call print
 	jp .loop
-.instr: db "Address > ", 0
+.format:
+	;ld hl, .format_areyousure
+	;call printnl
+	;call rec_char
+	;push af
+	;ld a, 13
+	;call send
+	;pop af
+	;cp 'Y'
+	;jp nz, .loop
+	;ld hl,.formatting
+	;call print
+	;call format
+	;ld hl, .formatted
+	;call print
+	jp .loop
 .dxdiag:  ; Diagnostic Program
 	call dxdiag
 	jp .loop
-.peek:
-	ld hl, .instr
-	call ostream
-    ld hl, term_kbd_buff
-	call input
-	call hex_to_int
-	ld hl, .outstr
-	call ostream
-	ld a, (de)
-	call byte_to_hex
-	call print
-	jp .loop
-.poke:
-	ld hl, .instr
-	call ostream
-    ld hl, term_kbd_buff
-	call input
-	call hex_to_int
-	ld hl, .outstr
-	call ostream
-    ld hl, term_kbd_buff
-	call input
-	call hex_to_byte
-	ex de, hl
-	ld (hl),a
-	jp .loop
-.inspect:
-	ld hl, .instr
-	call ostream
-    ld hl, term_kbd_buff
-	call input
-	call hex_to_int
-	ld h, d
-	ld l, e
-	call print_memory
-	jp .loop
 .bytes_str: db " Bytes", 0
-term_start_string: db "NTIOS 0.3", 0
+.format_areyousure: db "You are about to erase all data on the drive. Are you sure? [Y/n]",0
+.formatting:		db "Formatting...",0
+.formatted:			db "Done formatting.",0
+term_start_string: db "NTIOS 0.1", 0
 term_cursor:       db "# ", 0
 cmd_mem:           db "mem", 0
 cmd_cls:           db "cls", 0
-cmd_out:           db "out", 0
-cmd_in:           db "in", 0
-cmd_peek:			db "peek",0
-cmd_poke:			db "poke",0
-cmd_inspect:		db "inspect",0
+cmd_dir:			db "dir", 0
 cmd_reboot:			db "reboot", 0
+cmd_di:				DB "di", 0
 cmd_dxdiag:			DB "dxdiag", 0
-no_cmd:            db "Command Not Found.", 0
-heap_top:      equ $8002
-tmp:           equ $8004
-term_kbd_buff: equ $8006
-teststr: db "Get rekt bAd kidZ.",0
-ssd_fs:
-	db "test.txt", 0
-	dw 19
-	dw teststr
-test_bin_end:
-	db 0
+cmd_format:			DB "format", 0
+no_cmd:            	db "Command Not Found.", 0
+disk_name_str:		db "Label: ",0
+heap_top:		equ $8002
+tmp:			equ $8004
+term_kbd_buff:	equ $8006
+catch_stack:	equ $8105
+tmp_sp:			equ $8106
+tmp_sp2:		equ $8108
+catch_sp:		equ $8108
+fs_s0:			equ $810A
+fs_buffer:		equ $830A
