@@ -86,7 +86,58 @@ os_start:
 	im 1
 	ei
 	
+PD7P: equ 0x80
+	xor a
+	out (PD7P+1),a
+	in a, (PD7P)
+	call byte_to_hex
+	call ostream
+	ld c, 8
+	ld hl, PD_init
+.lopen1:
+	in a, (PD7P)
+	and 2
+	jp nz, .lopen1
+	ld a, (hl)
+	inc hl
+	dec c
+	jp nz, .lopen1
+.loaded:
+	ld a, 0x9B
+	call wcmd
+	ld a, 0x30
+	call wcmd
+	ld a, 0x5A
+	call wparam
+	ld a, 0xB0
+	call wcmd
+.L2:
+	in a, (PD7P)
+	and 1
+	jp z, .L2
+	in a, (PD7P+1)
+	call byte_to_hex
+	call ostream
+	
 	jp terminal_pgm     ; start terminal program! WOOO!
+wcmd:
+	push af
+.l:
+	in a, (PD7P)
+	and 2
+	jp nz,.l
+	pop af
+	out (PD7P+1),a
+	ret
+wparam:
+	push af
+.l:
+	in a, (PD7P)
+	and 2
+	jp nz,.l
+	pop af
+	out (PD7P),a
+	ret
 system_error:
 	call print
 	ld hl, .msg
@@ -242,6 +293,7 @@ no_cmd:            db "Command Not Found.", 0
 heap_top:      equ $8002
 tmp:           equ $8004
 term_kbd_buff: equ $8006
+PD_init: db 0x19, 0x3A, 0x3F, 0x0C, 0x1B, 0x04, 0x40, 0x3D
 teststr: db "Get rekt bAd kidZ.",0
 ssd_fs:
 	db "test.txt", 0
