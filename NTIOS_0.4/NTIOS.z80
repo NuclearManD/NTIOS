@@ -14,6 +14,8 @@ rec_char: equ uart_rec
 reboot: equ os_start
 
 stack_top:     equ $FFFF
+text_rows:		equ 20
+free_text_rows:	equ text_rows-3
 
 
 ;ide_port:      equ $8
@@ -126,12 +128,15 @@ INCLUDE "uart.z80"
 INCLUDE "memory.z80"
 INCLUDE "keyboard.z80"
 INCLUDE "IDE.z80"
+INCLUDE "ui.z80"
+INCLUDE "codetools.z80"
+INCLUDE "prog.z80"
 INCLUDE "FAT.z80"
 INCLUDE "dxdiag.z80"
 INCLUDE "misc.z80"
 INCLUDE "traceback.z80"
 cmd_help:          db "help", 0
-helpstr:           db "cls, mem, dir, reboot, di, dxdiag", 0
+helpstr:           db "cls, mem, reboot, di, dxdiag, in, out, peek, poke, inspect", 0
 terminal_pgm:
 	ld hl, term_start_string   ; pleasantly start the terminal
 	call print
@@ -141,112 +146,12 @@ terminal_pgm:
     ld hl, term_kbd_buff
 	call input
 	
-	ld de, cmd_help
-	call strcomp            ; seek'n help? we got you!
-	jr z, .help
-	
-	ld de, cmd_dxdiag
-	call strcomp            ; seek'n help? we got you!
-	jp z, .dxdiag
-	
-	ld de, cmd_cls
-	call strcomp
-	jr z, .cls
-	
-	ld de, cmd_mem
-	call strcomp
-	jr z, .mem
-	
-	ld de, cmd_dir
-	call strcomp
-	jr z, .dir
-	
-	ld de, cmd_reboot
-	call strcomp
-	jp z, reboot
-	
-	ld de, cmd_di
-	call strcomp
-	jp z, .di
-	
-	ld de, cmd_format
-	call strcomp
-	jp z, .format
-	
-	ld hl, no_cmd
-	call print
-	jp .loop
-.help:
-	ld hl, helpstr
-    call print
-    jr .loop
-.cls:
-	ld a, 0
-	call send
-	jr .loop
-.dir:
-	ld hl, .loop
-	call try
-	jp .e1
-	db 0,"terminal_pgm.e1",0
-.e1:
-	call list_files
-	call print
-	call notry
-	jp .loop
-.mem:
-	ld a, '0'
-	call send
-	ld a, 'x'
-	call send
-	call bytes_free
-	call int_to_hex
-	call ostream
-	ld hl, .bytes_str
-	call print
-	jp .loop
-.di:
-	ld hl, disk_name_str
-	call print
-	ld hl, (fs_s0)
-	ld bc, 0
-	ld de, 0
-	call ide_load
-	ld hl, (fs_s0+FAT.LABEL)
-	call print
-	jp .loop
-.format:
-	;ld hl, .format_areyousure
-	;call printnl
-	;call rec_char
-	;push af
-	;ld a, 13
-	;call send
-	;pop af
-	;cp 'Y'
-	;jp nz, .loop
-	;ld hl,.formatting
-	;call print
-	;call format
-	;ld hl, .formatted
+	call system
+	;ld hl, no_cmd
 	;call print
 	jp .loop
-.dxdiag:  ; Diagnostic Program
-	call dxdiag
-	jp .loop
-.bytes_str: db " Bytes", 0
-.format_areyousure: db "You are about to erase all data on the drive. Are you sure? [Y/n]",0
-.formatting:		db "Formatting...",0
-.formatted:			db "Done formatting.",0
-term_start_string: db "NTIOS 0.1", 0
+term_start_string: db "NTIOS 0.45", 0
 term_cursor:       db "# ", 0
-cmd_mem:           db "mem", 0
-cmd_cls:           db "cls", 0
-cmd_dir:			db "dir", 0
-cmd_reboot:			db "reboot", 0
-cmd_di:				DB "di", 0
-cmd_dxdiag:			DB "dxdiag", 0
-cmd_format:			DB "format", 0
 no_cmd:            	db "Command Not Found.", 0
 disk_name_str:		db "Label: ",0
 heap_top:		equ $8002

@@ -1,5 +1,4 @@
 ; ui.z80 : user interface tools and functions, 1711150917
-; DOES NOT WORK LOOK AT ui.z80 IN NTIOS0.4
 print_memory:
 	push hl
 	push de
@@ -8,6 +7,8 @@ print_memory:
 	and $F0		; ensure that it is the beginning
 	ld l, a
 	ld a, ' '
+	call send
+	call send
 	call send
 	call send
 	ld a, '|'
@@ -25,23 +26,31 @@ print_memory:
 	call send
 	jp .write_head
 .write_done:
+	ld a, 13
+	call send
 	ld c, free_text_rows-1 ; number of rows to output
 	pop hl
 .row_start:
+	push hl
 	ld a, h
 	call byte_to_hex
 	call ostream
+	pop hl
+	push hl
 	ld a, l
 	call byte_to_hex
 	call ostream
 	ld a, '|'
 	call send
+	pop hl
 .row_loop:
 	ld a, (hl)
+	push hl
 	call byte_to_hex
 	call ostream
 	ld a, ' '
 	call send
+	pop hl
 	inc hl
 	ld a, l
 	and $F
