@@ -1,5 +1,62 @@
 ; 1711171007
 ; programming tool
-sys_ide:
+compile:
+	ld hl, .name
+	call print
+	ld a, '>'
+	call send
 	
 	ret
+.name: db "Zkrypt Editor 0.1",0
+compile_line:
+	call tokenize
+load_code:
+	push de
+	push bc
+	
+	ld b, (hl)	; get program length
+	inc hl
+	ld c, (hl)
+	inc hl
+	
+	push hl		; allocate RAM for program
+	ld h, b
+	ld l, c
+	call alloc
+	ex de, hl
+	pop hl
+	
+	push de
+	ldir
+	
+	pop hl
+	pop bc
+	pop de
+	ret
+store_code:
+	push hl			; Don't overwrite OS!
+	or a
+	ld bc, OS_END
+	sbc hl,bc
+	jp c, .quit
+	pop hl
+	
+	ld a, b
+	ld (de), a
+	inc de
+	ld a, c			; save program length
+	ld (de), a
+	inc de
+	
+	ldir			; save program
+	
+	ret
+.quit:
+	ld hl, .errmsg
+	call print
+	jp .e
+	db 0,"store_code",0
+.e:
+	jp throw
+.errmsg: db "Cannot overwrite OS.",0
+	

@@ -1,0 +1,87 @@
+; ObjectUtils 1711171200
+
+list:
+	.len:		equ 0
+	.maxlen:	equ 2
+	.data:		equ 4
+; de is list and hl is element to append
+	.append:
+		push bc
+		push de
+		ex de, hl
+		; now de is element to append and hl is list
+		push de
+		
+		ld c, (hl)
+		inc hl
+		ld b, (hl)
+		inc hl
+		ld e, (hl)
+		inc hl
+		ld d, (hl)
+		inc hl
+		ex de, hl
+		; hl is list length and de is .data pointer
+		; element is on the stack
+		or a
+		sbc hl, bc
+		jp z, .realloc
+	._exit_pt:
+		ex de, hl
+		pop de
+		; de is element and hl is list data
+		push hl
+		ld h, b
+		ld l, c
+		add hl, bc
+		ld b, h
+		ld c, l
+		pop hl
+		; hl now has pointer to new element
+		ld (hl), e
+		inc hl
+		ld (hl), d
+		
+		pop de
+		push de
+		ex de, hl
+		inc (hl)
+		jp nc, .done
+		inc hl
+		inc (hl)
+	._done:
+		pop de
+		pop bc
+		ret
+	;.realloc:
+		db 0,"list.append",0
+	.realloc:
+		call throw
+	; give element pos. in bc and list in hl
+	; element returned in de
+	.get:
+		push bc
+		push hl
+		ld de, .data
+		add hl, de
+		
+		push hl
+		ld h, b
+		ld l, c
+		add hl, bc
+		ld b, h
+		ld c, l
+		pop hl
+		
+		add hl, bc
+		
+		ld e, (hl)
+		inc hl
+		ld d, (hl)
+		
+		pop hl
+		pop bc
+		ret
+		
+		
+		
