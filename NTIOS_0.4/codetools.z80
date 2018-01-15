@@ -69,8 +69,8 @@ system:
 	jp .e1
 	db 0,"terminal_pgm.e1",0
 .e1:
-	call list_files
-	call print
+	;call list_files
+	;call print
 	call notry
 	jp .loop
 .mem:
@@ -91,7 +91,7 @@ system:
 	ld bc, 0
 	ld de, 0
 	call ide_load
-	ld hl, (fs_s0+FAT.LABEL)
+	ld hl, (fs_s0+3)
 	call print
 	jp .loop
 .format:

@@ -28,6 +28,19 @@ ide_cmd:		EQU	ide_port + $07		; Command (W)
 ; THROWS DISK_ERROR
 ;***************************************************************************	
 db 0, "ide_init",0
+ide_init_bad:
+	call ide_reset
+	CALL	ide_wait_rdy
+	LD		A,$01						;LD features register to enable 8 bit
+	OUT		(ide_features),A
+	LD		A,$EF						;Send set features command
+	OUT		(ide_cmd),A
+	CALL	ide_wait_rdy
+	LD		A,$82						;LD features register to enable 8 bit
+	OUT		(ide_features),A
+	LD		A,$EF						;Send set features command
+	OUT		(ide_cmd),A
+	RET
 ide_init:
 	call ide_reset
 	CALL	ide_wait_rdy

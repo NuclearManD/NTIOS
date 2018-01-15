@@ -22,6 +22,15 @@ ide_LBA3:		EQU	ide_port + $06		; LBA bits 24-27 (R/W, _LBA mode)
 ide_status:		EQU	ide_port + $07		; Status (R)
 ide_cmd:		EQU	ide_port + $07		; Command (W)	
 
+
+;CF Features
+CF_8BIT         .EQU    1
+CF_NOCACHE      .EQU    082H
+;CF Commands
+CF_READ_SEC     .EQU    020H
+CF_WRITE_SEC    .EQU    030H
+CF_SET_FEAT     .EQU    0EFH 
+
 ;***************************************************************************
 ;ide_init
 ;Function: Initialize ide to 8 bit data transfer mode
@@ -30,10 +39,13 @@ ide_init:
 	CALL	ide_wait_rdy
 	LD		A,$01						;LD features register to enable 8 bit
 	OUT		(ide_features),A
-	CALL	ide_wait_rdy
 	LD		A,$EF						;Send set features command
 	OUT		(ide_cmd),A
 	CALL	ide_wait_rdy
+	LD		A,$82						;LD features register to enable 8 bit
+	OUT		(ide_features),A
+	LD		A,$EF						;Send set features command
+	OUT		(ide_cmd),A
 	RET
 
 ;***************************************************************************
