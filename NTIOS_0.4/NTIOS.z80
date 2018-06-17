@@ -70,7 +70,7 @@ os_start:
 	; Hardware (UART) setup if using 18.43MHz clock
 	ld a, $80 
 	out (3), a			; SET DLAB
-	ld a, 10			; 115200 baud
+	ld a, 1				; 115200 baud
 	out (0), a
 	ld a, 0
 	out (1), a        
