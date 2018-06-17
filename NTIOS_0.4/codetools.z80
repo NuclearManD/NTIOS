@@ -87,11 +87,11 @@ system:
 .di:
 	ld hl, disk_name_str
 	call print
-	ld hl, (fs_s0)
+	ld hl, fs_s0
 	ld bc, 0
 	ld de, 0
 	call ide_load
-	ld hl, (fs_s0+3)
+	ld hl, fs_s0+3
 	call print
 	jp .loop
 .format:
