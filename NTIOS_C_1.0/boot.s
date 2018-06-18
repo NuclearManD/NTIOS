@@ -133,6 +133,7 @@ int_to_hex::
 	ret
 ; len - get string length in bc
 strlen::
+	push hl
 	push de
 	push hl
 	ld a, #0
@@ -145,6 +146,7 @@ strlen::
 	ld h, d
 	ld l, e
 	pop de
+	pop hl
 	ret
 ; uart_send - send A to UART
 uart_send::
