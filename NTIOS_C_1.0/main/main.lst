@@ -1,7 +1,7 @@
                               1 ;--------------------------------------------------------
                               2 ; File Created by SDCC : free open source ANSI-C Compiler
                               3 ; Version 3.5.0 #9253 (Jun 20 2015) (MINGW64)
-                              4 ; This file was generated Sun Jun 17 15:14:40 2018
+                              4 ; This file was generated Mon Jun 18 03:52:26 2018
                               5 ;--------------------------------------------------------
                               6 	.module main
                               7 	.optsdcc -mz80
@@ -10,120 +10,218 @@
                              10 ; Public variables in this module
                              11 ;--------------------------------------------------------
                              12 	.globl _osstart
-                             13 	.globl _print
-                             14 	.globl _strcmp
-                             15 	.globl __c_retval
-                             16 	.globl _qb
-                             17 	.globl _qa
-                             18 ;--------------------------------------------------------
-                             19 ; special function registers
-                             20 ;--------------------------------------------------------
-                             21 ;--------------------------------------------------------
-                             22 ; ram data
-                             23 ;--------------------------------------------------------
-                             24 	.area _DATA
-   0000                      25 _qa::
-   0000                      26 	.ds 2
-   0002                      27 _qb::
-   0002                      28 	.ds 2
-   0004                      29 __c_retval::
-   0004                      30 	.ds 1
-                             31 ;--------------------------------------------------------
-                             32 ; ram data
-                             33 ;--------------------------------------------------------
-                             34 	.area _INITIALIZED
-                             35 ;--------------------------------------------------------
-                             36 ; absolute external ram data
+                             13 	.globl _cls
+                             14 	.globl _input
+                             15 	.globl _println
+                             16 	.globl _print
+                             17 	.globl _strcmp
+                             18 	.globl _kbdbuff
+                             19 	.globl __c_retval
+                             20 	.globl _qb
+                             21 	.globl _qa
+                             22 ;--------------------------------------------------------
+                             23 ; special function registers
+                             24 ;--------------------------------------------------------
+                             25 ;--------------------------------------------------------
+                             26 ; ram data
+                             27 ;--------------------------------------------------------
+                             28 	.area _DATA
+   0000                      29 _qa::
+   0000                      30 	.ds 2
+   0002                      31 _qb::
+   0002                      32 	.ds 2
+   0004                      33 __c_retval::
+   0004                      34 	.ds 1
+   0005                      35 _kbdbuff::
+   0005                      36 	.ds 128
                              37 ;--------------------------------------------------------
-                             38 	.area _DABS (ABS)
+                             38 ; ram data
                              39 ;--------------------------------------------------------
-                             40 ; global & static initialisations
+                             40 	.area _INITIALIZED
                              41 ;--------------------------------------------------------
-                             42 	.area _HOME
-                             43 	.area _GSINIT
-                             44 	.area _GSFINAL
-                             45 	.area _GSINIT
-                             46 ;--------------------------------------------------------
-                             47 ; Home
-                             48 ;--------------------------------------------------------
-                             49 	.area _HOME
-                             50 	.area _HOME
-                             51 ;--------------------------------------------------------
-                             52 ; code
-                             53 ;--------------------------------------------------------
-                             54 	.area _CODE
-                             55 ;os.h:7: char strcmp(char* str1, char* str2){
-                             56 ;	---------------------------------
-                             57 ; Function strcmp
-                             58 ; ---------------------------------
-   0000                      59 _strcmp::
-                             60 ;os.h:8: qa=str1;
-   0000 FD 21 02 00   [14]   61 	ld	iy,#2
-   0004 FD 39         [15]   62 	add	iy,sp
-   0006 FD 7E 00      [19]   63 	ld	a,0 (iy)
-   0009 FD 21r00r00   [14]   64 	ld	iy,#_qa
-   000D FD 77 00      [19]   65 	ld	0 (iy),a
-   0010 FD 21 02 00   [14]   66 	ld	iy,#2
-   0014 FD 39         [15]   67 	add	iy,sp
-   0016 FD 7E 01      [19]   68 	ld	a,1 (iy)
-   0019 FD 21r00r00   [14]   69 	ld	iy,#_qa
-   001D FD 77 01      [19]   70 	ld	1 (iy),a
-                             71 ;os.h:9: qb=str2;
-   0020 FD 21 04 00   [14]   72 	ld	iy,#4
-   0024 FD 39         [15]   73 	add	iy,sp
-   0026 FD 7E 00      [19]   74 	ld	a,0 (iy)
-   0029 FD 21r02r00   [14]   75 	ld	iy,#_qb
-   002D FD 77 00      [19]   76 	ld	0 (iy),a
-   0030 FD 21 04 00   [14]   77 	ld	iy,#4
-   0034 FD 39         [15]   78 	add	iy,sp
-   0036 FD 7E 01      [19]   79 	ld	a,1 (iy)
-   0039 FD 21r02r00   [14]   80 	ld	iy,#_qb
-   003D FD 77 01      [19]   81 	ld	1 (iy),a
-                             82 ;os.h:10: __asm__ ("ld hl, (_qa)\nld de, (_qb)\ncall strcomp\nld (__c_retval), a");
-   0040 2Ar00r00      [16]   83 	ld hl, (_qa)
-   0043 ED 5Br02r00   [20]   84 	ld de, (_qb)
-   0047 CDr00r00      [17]   85 	call strcomp
-   004A 32r04r00      [13]   86 	ld (__c_retval), a
-                             87 ;os.h:11: return _c_retval;
-   004D FD 21r04r00   [14]   88 	ld	iy,#__c_retval
-   0051 FD 6E 00      [19]   89 	ld	l,0 (iy)
-   0054 C9            [10]   90 	ret
-                             91 ;os.h:13: void print(char* s){
-                             92 ;	---------------------------------
-                             93 ; Function print
-                             94 ; ---------------------------------
-   0055                      95 _print::
-                             96 ;os.h:14: qa=s;
-   0055 FD 21 02 00   [14]   97 	ld	iy,#2
-   0059 FD 39         [15]   98 	add	iy,sp
-   005B FD 7E 00      [19]   99 	ld	a,0 (iy)
-   005E FD 21r00r00   [14]  100 	ld	iy,#_qa
-   0062 FD 77 00      [19]  101 	ld	0 (iy),a
-   0065 FD 21 02 00   [14]  102 	ld	iy,#2
-   0069 FD 39         [15]  103 	add	iy,sp
-   006B FD 7E 01      [19]  104 	ld	a,1 (iy)
-   006E FD 21r00r00   [14]  105 	ld	iy,#_qa
-   0072 FD 77 01      [19]  106 	ld	1 (iy),a
-                            107 ;os.h:15: __asm__ ("ld hl, (_qa)\ncall ostream");
-   0075 2Ar00r00      [16]  108 	ld hl, (_qa)
-   0078 CDr00r00      [17]  109 	call ostream
-   007B C9            [10]  110 	ret
-                            111 ;main.c:2: void osstart(){
-                            112 ;	---------------------------------
-                            113 ; Function osstart
-                            114 ; ---------------------------------
-   007C                     115 _osstart::
-                            116 ;main.c:3: print("Hello World!!");
-   007C 21r85r00      [10]  117 	ld	hl,#___str_0
-   007F E5            [11]  118 	push	hl
-   0080 CDr55r00      [17]  119 	call	_print
-   0083 F1            [10]  120 	pop	af
-   0084 C9            [10]  121 	ret
-   0085                     122 ___str_0:
-   0085 48 65 6C 6C 6F 20   123 	.ascii "Hello World!!"
-        57 6F 72 6C 64 21
-        21
-   0092 00                  124 	.db 0x00
-                            125 	.area _CODE
-                            126 	.area _INITIALIZER
-                            127 	.area _CABS (ABS)
+                             42 ; absolute external ram data
+                             43 ;--------------------------------------------------------
+                             44 	.area _DABS (ABS)
+                             45 ;--------------------------------------------------------
+                             46 ; global & static initialisations
+                             47 ;--------------------------------------------------------
+                             48 	.area _HOME
+                             49 	.area _GSINIT
+                             50 	.area _GSFINAL
+                             51 	.area _GSINIT
+                             52 ;--------------------------------------------------------
+                             53 ; Home
+                             54 ;--------------------------------------------------------
+                             55 	.area _HOME
+                             56 	.area _HOME
+                             57 ;--------------------------------------------------------
+                             58 ; code
+                             59 ;--------------------------------------------------------
+                             60 	.area _CODE
+                             61 ;os.h:14: char strcmp(char* str1, char* str2){
+                             62 ;	---------------------------------
+                             63 ; Function strcmp
+                             64 ; ---------------------------------
+   0000                      65 _strcmp::
+                             66 ;os.h:26: __endasm;
+   0000 C1            [10]   67 	pop bc
+   0001 E1            [10]   68 	pop hl
+   0002 D1            [10]   69 	pop de
+   0003 D5            [11]   70 	push de
+   0004 E5            [11]   71 	push hl
+   0005 C5            [11]   72 	push bc
+   0006 CDr00r00      [17]   73 	call strcomp
+   0009 6F            [ 4]   74 	ld l, a
+   000A C9            [10]   75 	ret
+                             76 ;os.h:28: void print(char* s){
+                             77 ;	---------------------------------
+                             78 ; Function print
+                             79 ; ---------------------------------
+   000B                      80 _print::
+                             81 ;os.h:36: __endasm;
+   000B C1            [10]   82 	pop bc
+   000C E1            [10]   83 	pop hl
+   000D E5            [11]   84 	push hl
+   000E C5            [11]   85 	push bc
+   000F CDr00r00      [17]   86 	call ostream
+   0012 C9            [10]   87 	ret
+                             88 ;os.h:38: void println(char* s){
+                             89 ;	---------------------------------
+                             90 ; Function println
+                             91 ; ---------------------------------
+   0013                      92 _println::
+                             93 ;os.h:48: __endasm;
+   0013 C1            [10]   94 	pop bc
+   0014 E1            [10]   95 	pop hl
+   0015 E5            [11]   96 	push hl
+   0016 C5            [11]   97 	push bc
+   0017 CDr00r00      [17]   98 	call ostream
+   001A 3E 0D         [ 7]   99 	ld a, #13
+   001C CDr00r00      [17]  100 	call uart_send
+   001F C9            [10]  101 	ret
+                            102 ;os.h:50: void input(char* sto){
+                            103 ;	---------------------------------
+                            104 ; Function input
+                            105 ; ---------------------------------
+   0020                     106 _input::
+                            107 ;os.h:58: __endasm;
+   0020 C1            [10]  108 	pop bc
+   0021 E1            [10]  109 	pop hl
+   0022 E5            [11]  110 	push hl
+   0023 C5            [11]  111 	push bc
+   0024 CDr00r00      [17]  112 	call uart_input
+   0027 C9            [10]  113 	ret
+                            114 ;os.h:60: void cls(){
+                            115 ;	---------------------------------
+                            116 ; Function cls
+                            117 ; ---------------------------------
+   0028                     118 _cls::
+                            119 ;os.h:64: __endasm;
+   0028 3E 00         [ 7]  120 	ld a, #0
+   002A CDr00r00      [17]  121 	call uart_send
+   002D C9            [10]  122 	ret
+                            123 ;main.c:3: void osstart(){
+                            124 ;	---------------------------------
+                            125 ; Function osstart
+                            126 ; ---------------------------------
+   002E                     127 _osstart::
+                            128 ;main.c:4: println("NTIOS 1.0\r(built with SDCC)");
+   002E 21r86r00      [10]  129 	ld	hl,#___str_0
+   0031 E5            [11]  130 	push	hl
+   0032 CDr13r00      [17]  131 	call	_println
+   0035 F1            [10]  132 	pop	af
+                            133 ;main.c:5: while(true){
+   0036                     134 00110$:
+                            135 ;main.c:6: print("> ");
+   0036 21rA2r00      [10]  136 	ld	hl,#___str_1
+   0039 E5            [11]  137 	push	hl
+   003A CDr0Br00      [17]  138 	call	_print
+                            139 ;main.c:7: input(kbdbuff);
+   003D 21r05r00      [10]  140 	ld	hl, #_kbdbuff
+   0040 E3            [19]  141 	ex	(sp),hl
+   0041 CDr20r00      [17]  142 	call	_input
+   0044 F1            [10]  143 	pop	af
+                            144 ;main.c:8: if(!strcmp(kbdbuff,"man")){
+   0045 21r05r00      [10]  145 	ld	hl,#_kbdbuff
+   0048 01rA5r00      [10]  146 	ld	bc,#___str_2
+   004B C5            [11]  147 	push	bc
+   004C E5            [11]  148 	push	hl
+   004D CDr00r00      [17]  149 	call	_strcmp
+   0050 F1            [10]  150 	pop	af
+   0051 F1            [10]  151 	pop	af
+   0052 7D            [ 4]  152 	ld	a,l
+   0053 B7            [ 4]  153 	or	a, a
+   0054 20 0A         [12]  154 	jr	NZ,00107$
+                            155 ;main.c:9: println("COMMANDS:\r  shutdown : halt the computer.\r  reboot : reboot the machine.");
+   0056 21rA9r00      [10]  156 	ld	hl,#___str_3
+   0059 E5            [11]  157 	push	hl
+   005A CDr13r00      [17]  158 	call	_println
+   005D F1            [10]  159 	pop	af
+   005E 18 D6         [12]  160 	jr	00110$
+   0060                     161 00107$:
+                            162 ;main.c:10: }else if(!strcmp(kbdbuff,"shutdown")){
+   0060 21r05r00      [10]  163 	ld	hl,#_kbdbuff
+   0063 01rF2r00      [10]  164 	ld	bc,#___str_4
+   0066 C5            [11]  165 	push	bc
+   0067 E5            [11]  166 	push	hl
+   0068 CDr00r00      [17]  167 	call	_strcmp
+   006B F1            [10]  168 	pop	af
+   006C F1            [10]  169 	pop	af
+   006D 7D            [ 4]  170 	ld	a,l
+   006E B7            [ 4]  171 	or	a, a
+   006F C8            [11]  172 	ret	Z
+                            173 ;main.c:12: }else if(!strcmp(kbdbuff,"reboot")){
+   0070 21r05r00      [10]  174 	ld	hl,#_kbdbuff
+   0073 01rFBr00      [10]  175 	ld	bc,#___str_5
+   0076 C5            [11]  176 	push	bc
+   0077 E5            [11]  177 	push	hl
+   0078 CDr00r00      [17]  178 	call	_strcmp
+   007B F1            [10]  179 	pop	af
+   007C F1            [10]  180 	pop	af
+   007D 7D            [ 4]  181 	ld	a,l
+   007E B7            [ 4]  182 	or	a, a
+   007F 20 B5         [12]  183 	jr	NZ,00110$
+                            184 ;main.c:13: __asm jp 0 __endasm;
+   0081 C3 00 00      [10]  185 	jp 0 
+   0084 18 B0         [12]  186 	jr	00110$
+   0086                     187 ___str_0:
+   0086 4E 54 49 4F 53 20   188 	.ascii "NTIOS 1.0"
+        31 2E 30
+   008F 0D                  189 	.db 0x0D
+   0090 28 62 75 69 6C 74   190 	.ascii "(built with SDCC)"
+        20 77 69 74 68 20
+        53 44 43 43 29
+   00A1 00                  191 	.db 0x00
+   00A2                     192 ___str_1:
+   00A2 3E 20               193 	.ascii "> "
+   00A4 00                  194 	.db 0x00
+   00A5                     195 ___str_2:
+   00A5 6D 61 6E            196 	.ascii "man"
+   00A8 00                  197 	.db 0x00
+   00A9                     198 ___str_3:
+   00A9 43 4F 4D 4D 41 4E   199 	.ascii "COMMANDS:"
+        44 53 3A
+   00B2 0D                  200 	.db 0x0D
+   00B3 20 20 73 68 75 74   201 	.ascii "  shutdown : halt the computer."
+        64 6F 77 6E 20 3A
+        20 68 61 6C 74 20
+        74 68 65 20 63 6F
+        6D 70 75 74 65 72
+        2E
+   00D2 0D                  202 	.db 0x0D
+   00D3 20 20 72 65 62 6F   203 	.ascii "  reboot : reboot "
+        6F 74 20 3A 20 72
+        65 62 6F 6F 74 20
+   00E5 74 68 65 20 6D 61   204 	.ascii "the machine."
+        63 68 69 6E 65 2E
+   00F1 00                  205 	.db 0x00
+   00F2                     206 ___str_4:
+   00F2 73 68 75 74 64 6F   207 	.ascii "shutdown"
+        77 6E
+   00FA 00                  208 	.db 0x00
+   00FB                     209 ___str_5:
+   00FB 72 65 62 6F 6F 74   210 	.ascii "reboot"
+   0101 00                  211 	.db 0x00
+                            212 	.area _CODE
+                            213 	.area _INITIALIZER
+                            214 	.area _CABS (ABS)

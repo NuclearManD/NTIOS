@@ -33,7 +33,6 @@ _CABS                               00000000    00000000 =           0. bytes (A
      00000000  s_SSEG                          
      00000000  s__CABS                         
      00000000  s__DABS                         
-     00000005  l__DATA                         
      00000008  s_REG_BANK_1                    
      00000010  s_REG_BANK_2                    
      00000018  s_BIT_BANK                      
@@ -41,15 +40,16 @@ _CABS                               00000000    00000000 =           0. bytes (A
      00000018  s_REG_BANK_3                    
      00000020  s_BSEG_BYTES                    
      0000004D  l_HOME                          
-     0000004D  s__DATA                         
-     00000050  s__CODE                         
-     00000052  s__GSFINAL                      
-     00000052  s__GSINIT                       
-     00000052  s__HOME                         
-     00000052  s__INITIALIZED                  
-     00000052  s__INITIALIZER                  
+     0000004D  s__CODE                         
+     00000085  l__DATA                         
      00000100  l_IRAM                          
-     00000175  l__CODE                         
+     000001E4  l__CODE                         
+     00008000  s__DATA                         
+     00008085  s__GSFINAL                      
+     00008085  s__GSINIT                       
+     00008085  s__HOME                         
+     00008085  s__INITIALIZED                  
+     00008085  s__INITIALIZER                  
 
 ASxxxx Linker V03.00 + NoICE + sdld,  page 2.
 Hexadecimal  [32-Bits]
@@ -67,22 +67,25 @@ Hexadecimal  [32-Bits]
 
 Area                                    Addr        Size        Decimal Bytes (Attributes)
 --------------------------------        ----        ----        ------- ----- ------------
-_CODE                               00000050    00000175 =         373. bytes (REL,CON)
+_CODE                               0000004D    000001E4 =         484. bytes (REL,CON)
 
       Value  Global                              Global Defined In Module
       -----  --------------------------------   ------------------------
-     00000050  os_start                           BOOT
-     0000007A  strcomp                            BOOT
-     00000091  int_to_hex                         BOOT
-     000000BD  strlen                             BOOT
-     000000CD  uart_send                          BOOT
-     000000D8  ostream                            BOOT
-     000000E8  uart_print                         BOOT
-     000000F1  uart_input                         BOOT
-     00000122  gsinit                             crt0
-     00000132  _strcmp                            main
-     00000187  _print                             main
-     000001AE  _osstart                           main
+     0000004D  os_start                           BOOT
+     00000077  strcomp                            BOOT
+     0000008E  int_to_hex                         BOOT
+     000000BA  strlen                             BOOT
+     000000CA  uart_send                          BOOT
+     000000D5  ostream                            BOOT
+     000000E5  uart_print                         BOOT
+     000000EE  uart_input                         BOOT
+     0000011F  gsinit                             crt0
+     0000012F  _strcmp                            main
+     0000013A  _print                             main
+     00000142  _println                           main
+     0000014F  _input                             main
+     00000157  _cls                               main
+     0000015D  _osstart                           main
 ASxxxx Linker V03.00 + NoICE + sdld,  page 4.
 Hexadecimal  [32-Bits]
 
@@ -100,13 +103,15 @@ Hexadecimal  [32-Bits]
 
 Area                                    Addr        Size        Decimal Bytes (Attributes)
 --------------------------------        ----        ----        ------- ----- ------------
-_DATA                               0000004D    00000005 =           5. bytes (REL,CON)
+_DATA                               00008000    00000085 =         133. bytes (REL,CON)
 
       Value  Global                              Global Defined In Module
       -----  --------------------------------   ------------------------
-     0000004D  _qa                                main
-     0000004F  _qb                                main
-     00000051  __c_retval                         main
+     00008000  _qa                                main
+     00008002  _qb                                main
+     00008004  __c_retval                         main
+     00008005  _kbdbuff                           main
+
 ASxxxx Linker V03.00 + NoICE + sdld,  page 6.
 
 Files Linked                              [ module(s) ]
@@ -124,7 +129,8 @@ XSEG = 0x0001
 PSEG = 0x0001
 ISEG = 0x0000
 BSEG = 0x0000
-_CODE=0x0050
+_CODE=0x004D
+_DATA=0x8000
 HOME=0x0000
 
 

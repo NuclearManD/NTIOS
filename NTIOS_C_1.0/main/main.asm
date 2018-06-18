@@ -1,7 +1,7 @@
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ANSI-C Compiler
 ; Version 3.5.0 #9253 (Jun 20 2015) (MINGW64)
-; This file was generated Sun Jun 17 15:14:40 2018
+; This file was generated Mon Jun 18 03:52:26 2018
 ;--------------------------------------------------------
 	.module main
 	.optsdcc -mz80
@@ -10,8 +10,12 @@
 ; Public variables in this module
 ;--------------------------------------------------------
 	.globl _osstart
+	.globl _cls
+	.globl _input
+	.globl _println
 	.globl _print
 	.globl _strcmp
+	.globl _kbdbuff
 	.globl __c_retval
 	.globl _qb
 	.globl _qa
@@ -28,6 +32,8 @@ _qb::
 	.ds 2
 __c_retval::
 	.ds 1
+_kbdbuff::
+	.ds 128
 ;--------------------------------------------------------
 ; ram data
 ;--------------------------------------------------------
@@ -52,75 +58,156 @@ __c_retval::
 ; code
 ;--------------------------------------------------------
 	.area _CODE
-;os.h:7: char strcmp(char* str1, char* str2){
+;os.h:14: char strcmp(char* str1, char* str2){
 ;	---------------------------------
 ; Function strcmp
 ; ---------------------------------
 _strcmp::
-;os.h:8: qa=str1;
-	ld	iy,#2
-	add	iy,sp
-	ld	a,0 (iy)
-	ld	iy,#_qa
-	ld	0 (iy),a
-	ld	iy,#2
-	add	iy,sp
-	ld	a,1 (iy)
-	ld	iy,#_qa
-	ld	1 (iy),a
-;os.h:9: qb=str2;
-	ld	iy,#4
-	add	iy,sp
-	ld	a,0 (iy)
-	ld	iy,#_qb
-	ld	0 (iy),a
-	ld	iy,#4
-	add	iy,sp
-	ld	a,1 (iy)
-	ld	iy,#_qb
-	ld	1 (iy),a
-;os.h:10: __asm__ ("ld hl, (_qa)\nld de, (_qb)\ncall strcomp\nld (__c_retval), a");
-	ld hl, (_qa)
-	ld de, (_qb)
+;os.h:26: __endasm;
+	pop bc
+	pop hl
+	pop de
+	push de
+	push hl
+	push bc
 	call strcomp
-	ld (__c_retval), a
-;os.h:11: return _c_retval;
-	ld	iy,#__c_retval
-	ld	l,0 (iy)
+	ld l, a
 	ret
-;os.h:13: void print(char* s){
+;os.h:28: void print(char* s){
 ;	---------------------------------
 ; Function print
 ; ---------------------------------
 _print::
-;os.h:14: qa=s;
-	ld	iy,#2
-	add	iy,sp
-	ld	a,0 (iy)
-	ld	iy,#_qa
-	ld	0 (iy),a
-	ld	iy,#2
-	add	iy,sp
-	ld	a,1 (iy)
-	ld	iy,#_qa
-	ld	1 (iy),a
-;os.h:15: __asm__ ("ld hl, (_qa)\ncall ostream");
-	ld hl, (_qa)
+;os.h:36: __endasm;
+	pop bc
+	pop hl
+	push hl
+	push bc
 	call ostream
 	ret
-;main.c:2: void osstart(){
+;os.h:38: void println(char* s){
+;	---------------------------------
+; Function println
+; ---------------------------------
+_println::
+;os.h:48: __endasm;
+	pop bc
+	pop hl
+	push hl
+	push bc
+	call ostream
+	ld a, #13
+	call uart_send
+	ret
+;os.h:50: void input(char* sto){
+;	---------------------------------
+; Function input
+; ---------------------------------
+_input::
+;os.h:58: __endasm;
+	pop bc
+	pop hl
+	push hl
+	push bc
+	call uart_input
+	ret
+;os.h:60: void cls(){
+;	---------------------------------
+; Function cls
+; ---------------------------------
+_cls::
+;os.h:64: __endasm;
+	ld a, #0
+	call uart_send
+	ret
+;main.c:3: void osstart(){
 ;	---------------------------------
 ; Function osstart
 ; ---------------------------------
 _osstart::
-;main.c:3: print("Hello World!!");
+;main.c:4: println("NTIOS 1.0\r(built with SDCC)");
 	ld	hl,#___str_0
 	push	hl
-	call	_print
+	call	_println
 	pop	af
-	ret
+;main.c:5: while(true){
+00110$:
+;main.c:6: print("> ");
+	ld	hl,#___str_1
+	push	hl
+	call	_print
+;main.c:7: input(kbdbuff);
+	ld	hl, #_kbdbuff
+	ex	(sp),hl
+	call	_input
+	pop	af
+;main.c:8: if(!strcmp(kbdbuff,"man")){
+	ld	hl,#_kbdbuff
+	ld	bc,#___str_2
+	push	bc
+	push	hl
+	call	_strcmp
+	pop	af
+	pop	af
+	ld	a,l
+	or	a, a
+	jr	NZ,00107$
+;main.c:9: println("COMMANDS:\r  shutdown : halt the computer.\r  reboot : reboot the machine.");
+	ld	hl,#___str_3
+	push	hl
+	call	_println
+	pop	af
+	jr	00110$
+00107$:
+;main.c:10: }else if(!strcmp(kbdbuff,"shutdown")){
+	ld	hl,#_kbdbuff
+	ld	bc,#___str_4
+	push	bc
+	push	hl
+	call	_strcmp
+	pop	af
+	pop	af
+	ld	a,l
+	or	a, a
+	ret	Z
+;main.c:12: }else if(!strcmp(kbdbuff,"reboot")){
+	ld	hl,#_kbdbuff
+	ld	bc,#___str_5
+	push	bc
+	push	hl
+	call	_strcmp
+	pop	af
+	pop	af
+	ld	a,l
+	or	a, a
+	jr	NZ,00110$
+;main.c:13: __asm jp 0 __endasm;
+	jp 0 
+	jr	00110$
 ___str_0:
-	.ascii "Hello World!!"
+	.ascii "NTIOS 1.0"
+	.db 0x0D
+	.ascii "(built with SDCC)"
+	.db 0x00
+___str_1:
+	.ascii "> "
+	.db 0x00
+___str_2:
+	.ascii "man"
+	.db 0x00
+___str_3:
+	.ascii "COMMANDS:"
+	.db 0x0D
+	.ascii "  shutdown : halt the computer."
+	.db 0x0D
+	.ascii "  reboot : reboot "
+	.ascii "the machine."
+	.db 0x00
+___str_4:
+	.ascii "shutdown"
+	.db 0x00
+___str_5:
+	.ascii "reboot"
 	.db 0x00
 	.area _CODE
 	.area _INITIALIZER

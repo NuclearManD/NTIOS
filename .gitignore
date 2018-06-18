@@ -48,3 +48,7 @@ Temporary Items
 *.sym
 NTIOS_0.1/tniasm.exe
 *.tmp
+*.lk
+NTIOS_C_1.0/main/main.rel
+*.rst
+*.rst
