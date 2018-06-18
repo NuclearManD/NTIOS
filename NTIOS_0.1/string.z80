@@ -54,7 +54,7 @@ int_to_hex:
 	adc a, $40 ; Ascii hex at this point (0 to F)   
 	ret
 ; len - get string length in bc
-len:
+strlen:
 	push de
 	push hl
 	ld a, 0

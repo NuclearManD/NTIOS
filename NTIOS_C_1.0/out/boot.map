@@ -1,0 +1,130 @@
+ASxxxx Linker V03.00 + NoICE + sdld,  page 1.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+_CABS                               00000000    00000000 =           0. bytes (ABS,CON)
+
+      Value  Global                              Global Defined In Module
+      -----  --------------------------------   ------------------------
+     00000000  l_BIT_BANK                      
+     00000000  l_BSEG                          
+     00000000  l_BSEG_BYTES                    
+     00000000  l_DSEG                          
+     00000000  l_ISEG                          
+     00000000  l_OSEG                          
+     00000000  l_REG_BANK_0                    
+     00000000  l_REG_BANK_1                    
+     00000000  l_REG_BANK_2                    
+     00000000  l_REG_BANK_3                    
+     00000000  l_SSEG                          
+     00000000  l__CABS                         
+     00000000  l__DABS                         
+     00000000  l__GSFINAL                      
+     00000000  l__GSINIT                       
+     00000000  l__HOME                         
+     00000000  l__INITIALIZED                  
+     00000000  l__INITIALIZER                  
+     00000000  s_BSEG                          
+     00000000  s_DSEG                          
+     00000000  s_HOME                          
+     00000000  s_ISEG                          
+     00000000  s_REG_BANK_0                    
+     00000000  s_SSEG                          
+     00000000  s__CABS                         
+     00000000  s__DABS                         
+     00000005  l__DATA                         
+     00000008  s_REG_BANK_1                    
+     00000010  s_REG_BANK_2                    
+     00000018  s_BIT_BANK                      
+     00000018  s_OSEG                          
+     00000018  s_REG_BANK_3                    
+     00000020  s_BSEG_BYTES                    
+     0000004D  l_HOME                          
+     0000004D  s__DATA                         
+     00000050  s__CODE                         
+     00000052  s__GSFINAL                      
+     00000052  s__GSINIT                       
+     00000052  s__HOME                         
+     00000052  s__INITIALIZED                  
+     00000052  s__INITIALIZER                  
+     00000100  l_IRAM                          
+     00000175  l__CODE                         
+
+ASxxxx Linker V03.00 + NoICE + sdld,  page 2.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+.  .ABS.                            00000000    00000000 =           0. bytes (ABS,CON)
+
+      Value  Global                              Global Defined In Module
+      -----  --------------------------------   ------------------------
+     00000000  .__.ABS.                           main
+
+ASxxxx Linker V03.00 + NoICE + sdld,  page 3.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+_CODE                               00000050    00000175 =         373. bytes (REL,CON)
+
+      Value  Global                              Global Defined In Module
+      -----  --------------------------------   ------------------------
+     00000050  os_start                           BOOT
+     0000007A  strcomp                            BOOT
+     00000091  int_to_hex                         BOOT
+     000000BD  strlen                             BOOT
+     000000CD  uart_send                          BOOT
+     000000D8  ostream                            BOOT
+     000000E8  uart_print                         BOOT
+     000000F1  uart_input                         BOOT
+     00000122  gsinit                             crt0
+     00000132  _strcmp                            main
+     00000187  _print                             main
+     000001AE  _osstart                           main
+ASxxxx Linker V03.00 + NoICE + sdld,  page 4.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+HOME                                00000000    0000004D =          77. bytes (REL,CON)
+
+      Value  Global                              Global Defined In Module
+      -----  --------------------------------   ------------------------
+     00000000  _main                              BOOT
+     00000000  vectors                            BOOT
+     00000038  int38                              BOOT
+ASxxxx Linker V03.00 + NoICE + sdld,  page 5.
+Hexadecimal  [32-Bits]
+
+Area                                    Addr        Size        Decimal Bytes (Attributes)
+--------------------------------        ----        ----        ------- ----- ------------
+_DATA                               0000004D    00000005 =           5. bytes (REL,CON)
+
+      Value  Global                              Global Defined In Module
+      -----  --------------------------------   ------------------------
+     0000004D  _qa                                main
+     0000004F  _qb                                main
+     00000051  __c_retval                         main
+ASxxxx Linker V03.00 + NoICE + sdld,  page 6.
+
+Files Linked                              [ module(s) ]
+
+boot.rel                                  [  ]
+crt0.rel                                  [  ]
+main/main.rel                             [  ]
+
+ASxxxx Linker V03.00 + NoICE + sdld,  page 7.
+
+User Base Address Definitions
+
+HOME = 0x0000
+XSEG = 0x0001
+PSEG = 0x0001
+ISEG = 0x0000
+BSEG = 0x0000
+_CODE=0x0050
+HOME=0x0000
+
+
