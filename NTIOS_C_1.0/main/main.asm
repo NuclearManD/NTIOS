@@ -1,7 +1,7 @@
 ;--------------------------------------------------------
 ; File Created by SDCC : free open source ANSI-C Compiler
 ; Version 3.5.0 #9253 (Jun 20 2015) (MINGW64)
-; This file was generated Mon Jun 18 03:52:26 2018
+; This file was generated Mon Jun 18 04:10:31 2018
 ;--------------------------------------------------------
 	.module main
 	.optsdcc -mz80
@@ -16,9 +16,6 @@
 	.globl _print
 	.globl _strcmp
 	.globl _kbdbuff
-	.globl __c_retval
-	.globl _qb
-	.globl _qa
 ;--------------------------------------------------------
 ; special function registers
 ;--------------------------------------------------------
@@ -26,12 +23,6 @@
 ; ram data
 ;--------------------------------------------------------
 	.area _DATA
-_qa::
-	.ds 2
-_qb::
-	.ds 2
-__c_retval::
-	.ds 1
 _kbdbuff::
 	.ds 128
 ;--------------------------------------------------------
@@ -58,12 +49,12 @@ _kbdbuff::
 ; code
 ;--------------------------------------------------------
 	.area _CODE
-;os.h:14: char strcmp(char* str1, char* str2){
+;os.h:12: char strcmp(char* str1, char* str2){
 ;	---------------------------------
 ; Function strcmp
 ; ---------------------------------
 _strcmp::
-;os.h:26: __endasm;
+;os.h:24: __endasm;
 	pop bc
 	pop hl
 	pop de
@@ -73,24 +64,24 @@ _strcmp::
 	call strcomp
 	ld l, a
 	ret
-;os.h:28: void print(char* s){
+;os.h:26: void print(char* s){
 ;	---------------------------------
 ; Function print
 ; ---------------------------------
 _print::
-;os.h:36: __endasm;
+;os.h:34: __endasm;
 	pop bc
 	pop hl
 	push hl
 	push bc
 	call ostream
 	ret
-;os.h:38: void println(char* s){
+;os.h:36: void println(char* s){
 ;	---------------------------------
 ; Function println
 ; ---------------------------------
 _println::
-;os.h:48: __endasm;
+;os.h:46: __endasm;
 	pop bc
 	pop hl
 	push hl
@@ -99,24 +90,24 @@ _println::
 	ld a, #13
 	call uart_send
 	ret
-;os.h:50: void input(char* sto){
+;os.h:48: void input(char* sto){
 ;	---------------------------------
 ; Function input
 ; ---------------------------------
 _input::
-;os.h:58: __endasm;
+;os.h:56: __endasm;
 	pop bc
 	pop hl
 	push hl
 	push bc
 	call uart_input
 	ret
-;os.h:60: void cls(){
+;os.h:58: void cls(){
 ;	---------------------------------
 ; Function cls
 ; ---------------------------------
 _cls::
-;os.h:64: __endasm;
+;os.h:62: __endasm;
 	ld a, #0
 	call uart_send
 	ret

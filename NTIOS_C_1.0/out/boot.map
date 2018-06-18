@@ -41,15 +41,15 @@ _CABS                               00000000    00000000 =           0. bytes (A
      00000020  s_BSEG_BYTES                    
      0000004D  l_HOME                          
      0000004D  s__CODE                         
-     00000085  l__DATA                         
+     00000080  l__DATA                         
      00000100  l_IRAM                          
      000001E4  l__CODE                         
      00008000  s__DATA                         
-     00008085  s__GSFINAL                      
-     00008085  s__GSINIT                       
-     00008085  s__HOME                         
-     00008085  s__INITIALIZED                  
-     00008085  s__INITIALIZER                  
+     00008080  s__GSFINAL                      
+     00008080  s__GSINIT                       
+     00008080  s__HOME                         
+     00008080  s__INITIALIZED                  
+     00008080  s__INITIALIZER                  
 
 ASxxxx Linker V03.00 + NoICE + sdld,  page 2.
 Hexadecimal  [32-Bits]
@@ -103,14 +103,11 @@ Hexadecimal  [32-Bits]
 
 Area                                    Addr        Size        Decimal Bytes (Attributes)
 --------------------------------        ----        ----        ------- ----- ------------
-_DATA                               00008000    00000085 =         133. bytes (REL,CON)
+_DATA                               00008000    00000080 =         128. bytes (REL,CON)
 
       Value  Global                              Global Defined In Module
       -----  --------------------------------   ------------------------
-     00008000  _qa                                main
-     00008002  _qb                                main
-     00008004  __c_retval                         main
-     00008005  _kbdbuff                           main
+     00008000  _kbdbuff                           main
 
 ASxxxx Linker V03.00 + NoICE + sdld,  page 6.
 

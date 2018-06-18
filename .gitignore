@@ -52,3 +52,4 @@ NTIOS_0.1/tniasm.exe
 NTIOS_C_1.0/main/main.rel
 *.rst
 *.rst
+NTIOS_C_1.0/boot.rel
