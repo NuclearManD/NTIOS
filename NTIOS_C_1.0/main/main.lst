@@ -1,7 +1,7 @@
                               1 ;--------------------------------------------------------
                               2 ; File Created by SDCC : free open source ANSI-C Compiler
                               3 ; Version 3.5.0 #9253 (Jun 20 2015) (MINGW64)
-                              4 ; This file was generated Mon Jun 18 04:10:31 2018
+                              4 ; This file was generated Mon Jun 18 07:53:23 2018
                               5 ;--------------------------------------------------------
                               6 	.module main
                               7 	.optsdcc -mz80
@@ -10,209 +10,2400 @@
                              10 ; Public variables in this module
                              11 ;--------------------------------------------------------
                              12 	.globl _osstart
-                             13 	.globl _cls
-                             14 	.globl _input
-                             15 	.globl _println
-                             16 	.globl _print
-                             17 	.globl _strcmp
-                             18 	.globl _kbdbuff
-                             19 ;--------------------------------------------------------
-                             20 ; special function registers
-                             21 ;--------------------------------------------------------
-                             22 ;--------------------------------------------------------
-                             23 ; ram data
-                             24 ;--------------------------------------------------------
-                             25 	.area _DATA
-   0000                      26 _kbdbuff::
-   0000                      27 	.ds 128
-                             28 ;--------------------------------------------------------
-                             29 ; ram data
-                             30 ;--------------------------------------------------------
-                             31 	.area _INITIALIZED
-                             32 ;--------------------------------------------------------
-                             33 ; absolute external ram data
-                             34 ;--------------------------------------------------------
-                             35 	.area _DABS (ABS)
-                             36 ;--------------------------------------------------------
-                             37 ; global & static initialisations
-                             38 ;--------------------------------------------------------
-                             39 	.area _HOME
-                             40 	.area _GSINIT
-                             41 	.area _GSFINAL
-                             42 	.area _GSINIT
-                             43 ;--------------------------------------------------------
-                             44 ; Home
+                             13 	.globl _parse
+                             14 	.globl _resolveExpression
+                             15 	.globl _readNumber
+                             16 	.globl _readText
+                             17 	.globl _getVar
+                             18 	.globl _addVariable
+                             19 	.globl _toString
+                             20 	.globl _system
+                             21 	.globl _sprintf
+                             22 	.globl _itoa
+                             23 	.globl _atoi
+                             24 	.globl _memFree
+                             25 	.globl _free
+                             26 	.globl _malloc
+                             27 	.globl _cls
+                             28 	.globl _input
+                             29 	.globl _println
+                             30 	.globl _print
+                             31 	.globl _strlen
+                             32 	.globl _strcmp
+                             33 	.globl _initOS
+                             34 	.globl _buffer
+                             35 	.globl _kbdbuff
+                             36 	.globl _raw
+                             37 	.globl _nil
+                             38 	.globl _vars
+                             39 	.globl _num_vars
+                             40 	.globl _itoa_tmp
+                             41 	.globl _heap_loc
+                             42 	.globl _heap
+                             43 	.globl _readExpression
+                             44 	.globl _dext
                              45 ;--------------------------------------------------------
-                             46 	.area _HOME
-                             47 	.area _HOME
+                             46 ; special function registers
+                             47 ;--------------------------------------------------------
                              48 ;--------------------------------------------------------
-                             49 ; code
+                             49 ; ram data
                              50 ;--------------------------------------------------------
-                             51 	.area _CODE
-                             52 ;os.h:12: char strcmp(char* str1, char* str2){
-                             53 ;	---------------------------------
-                             54 ; Function strcmp
-                             55 ; ---------------------------------
-   0000                      56 _strcmp::
-                             57 ;os.h:24: __endasm;
-   0000 C1            [10]   58 	pop bc
-   0001 E1            [10]   59 	pop hl
-   0002 D1            [10]   60 	pop de
-   0003 D5            [11]   61 	push de
-   0004 E5            [11]   62 	push hl
-   0005 C5            [11]   63 	push bc
-   0006 CDr00r00      [17]   64 	call strcomp
-   0009 6F            [ 4]   65 	ld l, a
-   000A C9            [10]   66 	ret
-                             67 ;os.h:26: void print(char* s){
-                             68 ;	---------------------------------
-                             69 ; Function print
-                             70 ; ---------------------------------
-   000B                      71 _print::
-                             72 ;os.h:34: __endasm;
-   000B C1            [10]   73 	pop bc
-   000C E1            [10]   74 	pop hl
-   000D E5            [11]   75 	push hl
-   000E C5            [11]   76 	push bc
-   000F CDr00r00      [17]   77 	call ostream
-   0012 C9            [10]   78 	ret
-                             79 ;os.h:36: void println(char* s){
-                             80 ;	---------------------------------
-                             81 ; Function println
-                             82 ; ---------------------------------
-   0013                      83 _println::
-                             84 ;os.h:46: __endasm;
-   0013 C1            [10]   85 	pop bc
-   0014 E1            [10]   86 	pop hl
-   0015 E5            [11]   87 	push hl
-   0016 C5            [11]   88 	push bc
-   0017 CDr00r00      [17]   89 	call ostream
-   001A 3E 0D         [ 7]   90 	ld a, #13
-   001C CDr00r00      [17]   91 	call uart_send
-   001F C9            [10]   92 	ret
-                             93 ;os.h:48: void input(char* sto){
-                             94 ;	---------------------------------
-                             95 ; Function input
-                             96 ; ---------------------------------
-   0020                      97 _input::
-                             98 ;os.h:56: __endasm;
-   0020 C1            [10]   99 	pop bc
-   0021 E1            [10]  100 	pop hl
-   0022 E5            [11]  101 	push hl
-   0023 C5            [11]  102 	push bc
-   0024 CDr00r00      [17]  103 	call uart_input
-   0027 C9            [10]  104 	ret
-                            105 ;os.h:58: void cls(){
-                            106 ;	---------------------------------
-                            107 ; Function cls
-                            108 ; ---------------------------------
-   0028                     109 _cls::
-                            110 ;os.h:62: __endasm;
-   0028 3E 00         [ 7]  111 	ld a, #0
-   002A CDr00r00      [17]  112 	call uart_send
-   002D C9            [10]  113 	ret
-                            114 ;main.c:3: void osstart(){
-                            115 ;	---------------------------------
-                            116 ; Function osstart
-                            117 ; ---------------------------------
-   002E                     118 _osstart::
-                            119 ;main.c:4: println("NTIOS 1.0\r(built with SDCC)");
-   002E 21r86r00      [10]  120 	ld	hl,#___str_0
-   0031 E5            [11]  121 	push	hl
-   0032 CDr13r00      [17]  122 	call	_println
-   0035 F1            [10]  123 	pop	af
-                            124 ;main.c:5: while(true){
-   0036                     125 00110$:
-                            126 ;main.c:6: print("> ");
-   0036 21rA2r00      [10]  127 	ld	hl,#___str_1
-   0039 E5            [11]  128 	push	hl
-   003A CDr0Br00      [17]  129 	call	_print
-                            130 ;main.c:7: input(kbdbuff);
-   003D 21r00r00      [10]  131 	ld	hl, #_kbdbuff
-   0040 E3            [19]  132 	ex	(sp),hl
-   0041 CDr20r00      [17]  133 	call	_input
-   0044 F1            [10]  134 	pop	af
-                            135 ;main.c:8: if(!strcmp(kbdbuff,"man")){
-   0045 21r00r00      [10]  136 	ld	hl,#_kbdbuff
-   0048 01rA5r00      [10]  137 	ld	bc,#___str_2
-   004B C5            [11]  138 	push	bc
-   004C E5            [11]  139 	push	hl
-   004D CDr00r00      [17]  140 	call	_strcmp
-   0050 F1            [10]  141 	pop	af
-   0051 F1            [10]  142 	pop	af
-   0052 7D            [ 4]  143 	ld	a,l
-   0053 B7            [ 4]  144 	or	a, a
-   0054 20 0A         [12]  145 	jr	NZ,00107$
-                            146 ;main.c:9: println("COMMANDS:\r  shutdown : halt the computer.\r  reboot : reboot the machine.");
-   0056 21rA9r00      [10]  147 	ld	hl,#___str_3
-   0059 E5            [11]  148 	push	hl
-   005A CDr13r00      [17]  149 	call	_println
-   005D F1            [10]  150 	pop	af
-   005E 18 D6         [12]  151 	jr	00110$
-   0060                     152 00107$:
-                            153 ;main.c:10: }else if(!strcmp(kbdbuff,"shutdown")){
-   0060 21r00r00      [10]  154 	ld	hl,#_kbdbuff
-   0063 01rF2r00      [10]  155 	ld	bc,#___str_4
-   0066 C5            [11]  156 	push	bc
-   0067 E5            [11]  157 	push	hl
-   0068 CDr00r00      [17]  158 	call	_strcmp
-   006B F1            [10]  159 	pop	af
-   006C F1            [10]  160 	pop	af
-   006D 7D            [ 4]  161 	ld	a,l
-   006E B7            [ 4]  162 	or	a, a
-   006F C8            [11]  163 	ret	Z
-                            164 ;main.c:12: }else if(!strcmp(kbdbuff,"reboot")){
-   0070 21r00r00      [10]  165 	ld	hl,#_kbdbuff
-   0073 01rFBr00      [10]  166 	ld	bc,#___str_5
-   0076 C5            [11]  167 	push	bc
-   0077 E5            [11]  168 	push	hl
-   0078 CDr00r00      [17]  169 	call	_strcmp
-   007B F1            [10]  170 	pop	af
-   007C F1            [10]  171 	pop	af
-   007D 7D            [ 4]  172 	ld	a,l
-   007E B7            [ 4]  173 	or	a, a
-   007F 20 B5         [12]  174 	jr	NZ,00110$
-                            175 ;main.c:13: __asm jp 0 __endasm;
-   0081 C3 00 00      [10]  176 	jp 0 
-   0084 18 B0         [12]  177 	jr	00110$
-   0086                     178 ___str_0:
-   0086 4E 54 49 4F 53 20   179 	.ascii "NTIOS 1.0"
-        31 2E 30
-   008F 0D                  180 	.db 0x0D
-   0090 28 62 75 69 6C 74   181 	.ascii "(built with SDCC)"
-        20 77 69 74 68 20
-        53 44 43 43 29
-   00A1 00                  182 	.db 0x00
-   00A2                     183 ___str_1:
-   00A2 3E 20               184 	.ascii "> "
-   00A4 00                  185 	.db 0x00
-   00A5                     186 ___str_2:
-   00A5 6D 61 6E            187 	.ascii "man"
-   00A8 00                  188 	.db 0x00
-   00A9                     189 ___str_3:
-   00A9 43 4F 4D 4D 41 4E   190 	.ascii "COMMANDS:"
+                             51 	.area _DATA
+   0000                      52 _heap::
+   0000                      53 	.ds 16384
+   4000                      54 _heap_loc::
+   4000                      55 	.ds 2
+   4002                      56 _itoa_tmp::
+   4002                      57 	.ds 7
+   4009                      58 _num_vars::
+   4009                      59 	.ds 2
+   400B                      60 _vars::
+   400B                      61 	.ds 2
+   400D                      62 _nil::
+   400D                      63 	.ds 6
+   4013                      64 _raw::
+   4013                      65 	.ds 2
+   4015                      66 _kbdbuff::
+   4015                      67 	.ds 128
+   4095                      68 _buffer::
+   4095                      69 	.ds 256
+                             70 ;--------------------------------------------------------
+                             71 ; ram data
+                             72 ;--------------------------------------------------------
+                             73 	.area _INITIALIZED
+                             74 ;--------------------------------------------------------
+                             75 ; absolute external ram data
+                             76 ;--------------------------------------------------------
+                             77 	.area _DABS (ABS)
+                             78 ;--------------------------------------------------------
+                             79 ; global & static initialisations
+                             80 ;--------------------------------------------------------
+                             81 	.area _HOME
+                             82 	.area _GSINIT
+                             83 	.area _GSFINAL
+                             84 	.area _GSINIT
+                             85 ;--------------------------------------------------------
+                             86 ; Home
+                             87 ;--------------------------------------------------------
+                             88 	.area _HOME
+                             89 	.area _HOME
+                             90 ;--------------------------------------------------------
+                             91 ; code
+                             92 ;--------------------------------------------------------
+                             93 	.area _CODE
+                             94 ;os.c:17: void initOS(){
+                             95 ;	---------------------------------
+                             96 ; Function initOS
+                             97 ; ---------------------------------
+   0000                      98 _initOS::
+                             99 ;os.c:18: heap_loc=0;
+   0000 21 00 00      [10]  100 	ld	hl,#0x0000
+   0003 22r00r40      [16]  101 	ld	(_heap_loc),hl
+   0006 C9            [10]  102 	ret
+                            103 ;os.c:20: char strcmp(char* str1, char* str2){
+                            104 ;	---------------------------------
+                            105 ; Function strcmp
+                            106 ; ---------------------------------
+   0007                     107 _strcmp::
+                            108 ;os.c:32: __endasm;
+   0007 C1            [10]  109 	pop bc
+   0008 E1            [10]  110 	pop hl
+   0009 D1            [10]  111 	pop de
+   000A D5            [11]  112 	push de
+   000B E5            [11]  113 	push hl
+   000C C5            [11]  114 	push bc
+   000D CDr00r00      [17]  115 	call strcomp
+   0010 6F            [ 4]  116 	ld l, a
+   0011 C9            [10]  117 	ret
+                            118 ;os.c:34: int strlen(char* str1){
+                            119 ;	---------------------------------
+                            120 ; Function strlen
+                            121 ; ---------------------------------
+   0012                     122 _strlen::
+                            123 ;os.c:44: __endasm;
+   0012 C1            [10]  124 	pop bc
+   0013 E1            [10]  125 	pop hl
+   0014 E5            [11]  126 	push hl
+   0015 C5            [11]  127 	push bc
+   0016 CDr00r00      [17]  128 	call strlen
+   0019 69            [ 4]  129 	ld l, c
+   001A 60            [ 4]  130 	ld h, b
+   001B C9            [10]  131 	ret
+                            132 ;os.c:46: void print(char* s){
+                            133 ;	---------------------------------
+                            134 ; Function print
+                            135 ; ---------------------------------
+   001C                     136 _print::
+                            137 ;os.c:54: __endasm;
+   001C C1            [10]  138 	pop bc
+   001D E1            [10]  139 	pop hl
+   001E E5            [11]  140 	push hl
+   001F C5            [11]  141 	push bc
+   0020 CDr00r00      [17]  142 	call ostream
+   0023 C9            [10]  143 	ret
+                            144 ;os.c:56: void println(char* s){
+                            145 ;	---------------------------------
+                            146 ; Function println
+                            147 ; ---------------------------------
+   0024                     148 _println::
+                            149 ;os.c:66: __endasm;
+   0024 C1            [10]  150 	pop bc
+   0025 E1            [10]  151 	pop hl
+   0026 E5            [11]  152 	push hl
+   0027 C5            [11]  153 	push bc
+   0028 CDr00r00      [17]  154 	call ostream
+   002B 3E 0D         [ 7]  155 	ld a, #13
+   002D CDr00r00      [17]  156 	call uart_send
+   0030 C9            [10]  157 	ret
+                            158 ;os.c:68: void input(char* sto){
+                            159 ;	---------------------------------
+                            160 ; Function input
+                            161 ; ---------------------------------
+   0031                     162 _input::
+                            163 ;os.c:76: __endasm;
+   0031 C1            [10]  164 	pop bc
+   0032 E1            [10]  165 	pop hl
+   0033 E5            [11]  166 	push hl
+   0034 C5            [11]  167 	push bc
+   0035 CDr00r00      [17]  168 	call uart_input
+   0038 C9            [10]  169 	ret
+                            170 ;os.c:78: void cls(){
+                            171 ;	---------------------------------
+                            172 ; Function cls
+                            173 ; ---------------------------------
+   0039                     174 _cls::
+                            175 ;os.c:82: __endasm;
+   0039 3E 00         [ 7]  176 	ld a, #0
+   003B CDr00r00      [17]  177 	call uart_send
+   003E C9            [10]  178 	ret
+                            179 ;os.c:84: char* malloc(int size){
+                            180 ;	---------------------------------
+                            181 ; Function malloc
+                            182 ; ---------------------------------
+   003F                     183 _malloc::
+                            184 ;os.c:85: char* q=(char*)((int)heap+heap_loc);
+   003F 11r00r00      [10]  185 	ld	de,#_heap
+   0042 2Ar00r40      [16]  186 	ld	hl,(_heap_loc)
+   0045 19            [11]  187 	add	hl,de
+   0046 55            [ 4]  188 	ld	d,l
+   0047 5C            [ 4]  189 	ld	e,h
+                            190 ;os.c:86: heap_loc+=size;
+   0048 21 02 00      [10]  191 	ld	hl,#2
+   004B 39            [11]  192 	add	hl,sp
+   004C D5            [11]  193 	push	de
+   004D FD 21r00r40   [14]  194 	ld	iy,#_heap_loc
+   0051 FD E5         [15]  195 	push	iy
+   0053 D1            [10]  196 	pop	de
+   0054 1A            [ 7]  197 	ld	a,(de)
+   0055 86            [ 7]  198 	add	a, (hl)
+   0056 12            [ 7]  199 	ld	(de),a
+   0057 13            [ 6]  200 	inc	de
+   0058 1A            [ 7]  201 	ld	a,(de)
+   0059 23            [ 6]  202 	inc	hl
+   005A 8E            [ 7]  203 	adc	a, (hl)
+   005B 12            [ 7]  204 	ld	(de),a
+   005C D1            [10]  205 	pop	de
+                            206 ;os.c:87: return q;
+   005D 6A            [ 4]  207 	ld	l, d
+   005E 63            [ 4]  208 	ld	h, e
+   005F C9            [10]  209 	ret
+                            210 ;os.c:89: void free(char* q){
+                            211 ;	---------------------------------
+                            212 ; Function free
+                            213 ; ---------------------------------
+   0060                     214 _free::
+                            215 ;os.c:90: q;
+   0060 C9            [10]  216 	ret
+                            217 ;os.c:92: int memFree(){
+                            218 ;	---------------------------------
+                            219 ; Function memFree
+                            220 ; ---------------------------------
+   0061                     221 _memFree::
+                            222 ;os.c:93: return HEAP_SIZE-heap_loc;
+   0061 21r00r40      [10]  223 	ld	hl,#_heap_loc
+   0064 AF            [ 4]  224 	xor	a, a
+   0065 96            [ 7]  225 	sub	a, (hl)
+   0066 57            [ 4]  226 	ld	d,a
+   0067 3E 40         [ 7]  227 	ld	a,#0x40
+   0069 23            [ 6]  228 	inc	hl
+   006A 9E            [ 7]  229 	sbc	a, (hl)
+   006B 5F            [ 4]  230 	ld	e,a
+   006C 6A            [ 4]  231 	ld	l, d
+   006D 63            [ 4]  232 	ld	h, e
+   006E C9            [10]  233 	ret
+                            234 ;os.c:95: int atoi(char* str){
+                            235 ;	---------------------------------
+                            236 ; Function atoi
+                            237 ; ---------------------------------
+   006F                     238 _atoi::
+   006F CDr00r00      [17]  239 	call	___sdcc_enter_ix
+   0072 F5            [11]  240 	push	af
+                            241 ;os.c:96: int len=strlen(str);
+   0073 DD 6E 04      [19]  242 	ld	l,4 (ix)
+   0076 DD 66 05      [19]  243 	ld	h,5 (ix)
+   0079 E5            [11]  244 	push	hl
+   007A CDr12r00      [17]  245 	call	_strlen
+   007D F1            [10]  246 	pop	af
+   007E 4D            [ 4]  247 	ld	c, l
+   007F 44            [ 4]  248 	ld	b, h
+                            249 ;os.c:98: int o=0;
+                            250 ;os.c:99: for(i=0;i<len;i++){
+   0080 21 00 00      [10]  251 	ld	hl,#0x0000
+   0083 5D            [ 4]  252 	ld	e,l
+   0084 54            [ 4]  253 	ld	d,h
+   0085                     254 00103$:
+   0085 7B            [ 4]  255 	ld	a,e
+   0086 91            [ 4]  256 	sub	a, c
+   0087 7A            [ 4]  257 	ld	a,d
+   0088 98            [ 4]  258 	sbc	a, b
+   0089 E2r8Er00      [10]  259 	jp	PO, 00116$
+   008C EE 80         [ 7]  260 	xor	a, #0x80
+   008E                     261 00116$:
+   008E F2rBBr00      [10]  262 	jp	P,00101$
+                            263 ;os.c:100: o*=10;
+   0091 D5            [11]  264 	push	de
+   0092 5D            [ 4]  265 	ld	e, l
+   0093 54            [ 4]  266 	ld	d, h
+   0094 29            [11]  267 	add	hl, hl
+   0095 29            [11]  268 	add	hl, hl
+   0096 19            [11]  269 	add	hl, de
+   0097 29            [11]  270 	add	hl, hl
+   0098 D1            [10]  271 	pop	de
+   0099 E3            [19]  272 	ex	(sp), hl
+                            273 ;os.c:101: o+=str[i]-48;
+   009A DD 6E 04      [19]  274 	ld	l,4 (ix)
+   009D DD 66 05      [19]  275 	ld	h,5 (ix)
+   00A0 19            [11]  276 	add	hl,de
+   00A1 7E            [ 7]  277 	ld	a,(hl)
+   00A2 6F            [ 4]  278 	ld	l,a
+   00A3 17            [ 4]  279 	rla
+   00A4 9F            [ 4]  280 	sbc	a, a
+   00A5 67            [ 4]  281 	ld	h,a
+   00A6 7D            [ 4]  282 	ld	a,l
+   00A7 C6 D0         [ 7]  283 	add	a,#0xD0
+   00A9 6F            [ 4]  284 	ld	l,a
+   00AA 7C            [ 4]  285 	ld	a,h
+   00AB CE FF         [ 7]  286 	adc	a,#0xFF
+   00AD 67            [ 4]  287 	ld	h,a
+   00AE DD 7E FE      [19]  288 	ld	a,-2 (ix)
+   00B1 85            [ 4]  289 	add	a, l
+   00B2 6F            [ 4]  290 	ld	l,a
+   00B3 DD 7E FF      [19]  291 	ld	a,-1 (ix)
+   00B6 8C            [ 4]  292 	adc	a, h
+   00B7 67            [ 4]  293 	ld	h,a
+                            294 ;os.c:99: for(i=0;i<len;i++){
+   00B8 13            [ 6]  295 	inc	de
+   00B9 18 CA         [12]  296 	jr	00103$
+   00BB                     297 00101$:
+                            298 ;os.c:103: return o;
+   00BB F1            [10]  299 	pop	af
+   00BC DD E1         [14]  300 	pop	ix
+   00BE C9            [10]  301 	ret
+                            302 ;os.c:106: int itoa(char* out, int n){
+                            303 ;	---------------------------------
+                            304 ; Function itoa
+                            305 ; ---------------------------------
+   00BF                     306 _itoa::
+   00BF CDr00r00      [17]  307 	call	___sdcc_enter_ix
+   00C2 F5            [11]  308 	push	af
+   00C3 F5            [11]  309 	push	af
+   00C4 F5            [11]  310 	push	af
+                            311 ;os.c:108: int r=-1;
+   00C5 DD 36 FC FF   [19]  312 	ld	-4 (ix),#0xFF
+   00C9 DD 36 FD FF   [19]  313 	ld	-3 (ix),#0xFF
+                            314 ;os.c:110: for(i=0;i<6;i++){
+   00CD 01 00 00      [10]  315 	ld	bc,#0x0000
+   00D0 11 00 00      [10]  316 	ld	de,#0x0000
+   00D3                     317 00107$:
+                            318 ;os.c:111: itoa_tmp[i]=48+(n%10);
+   00D3 21r02r40      [10]  319 	ld	hl,#_itoa_tmp
+   00D6 19            [11]  320 	add	hl,de
+   00D7 DD 75 FE      [19]  321 	ld	-2 (ix),l
+   00DA DD 74 FF      [19]  322 	ld	-1 (ix),h
+   00DD C5            [11]  323 	push	bc
+   00DE D5            [11]  324 	push	de
+   00DF 21 0A 00      [10]  325 	ld	hl,#0x000A
+   00E2 E5            [11]  326 	push	hl
+   00E3 DD 6E 06      [19]  327 	ld	l,6 (ix)
+   00E6 DD 66 07      [19]  328 	ld	h,7 (ix)
+   00E9 E5            [11]  329 	push	hl
+   00EA CDr00r00      [17]  330 	call	__modsint
+   00ED F1            [10]  331 	pop	af
+   00EE F1            [10]  332 	pop	af
+   00EF D1            [10]  333 	pop	de
+   00F0 C1            [10]  334 	pop	bc
+   00F1 7D            [ 4]  335 	ld	a,l
+   00F2 C6 30         [ 7]  336 	add	a, #0x30
+   00F4 DD 6E FE      [19]  337 	ld	l,-2 (ix)
+   00F7 DD 66 FF      [19]  338 	ld	h,-1 (ix)
+   00FA 77            [ 7]  339 	ld	(hl),a
+                            340 ;os.c:112: n=n/10;
+   00FB C5            [11]  341 	push	bc
+   00FC D5            [11]  342 	push	de
+   00FD 21 0A 00      [10]  343 	ld	hl,#0x000A
+   0100 E5            [11]  344 	push	hl
+   0101 DD 6E 06      [19]  345 	ld	l,6 (ix)
+   0104 DD 66 07      [19]  346 	ld	h,7 (ix)
+   0107 E5            [11]  347 	push	hl
+   0108 CDr00r00      [17]  348 	call	__divsint
+   010B F1            [10]  349 	pop	af
+   010C F1            [10]  350 	pop	af
+   010D D1            [10]  351 	pop	de
+   010E C1            [10]  352 	pop	bc
+   010F DD 75 06      [19]  353 	ld	6 (ix),l
+                            354 ;os.c:113: if(n==0){
+   0112 DD 74 07      [19]  355 	ld	7 (ix), h
+   0115 7C            [ 4]  356 	ld	a, h
+   0116 DD B6 06      [19]  357 	or	a,6 (ix)
+   0119 20 08         [12]  358 	jr	NZ,00108$
+                            359 ;os.c:114: r=i;
+   011B DD 71 FC      [19]  360 	ld	-4 (ix),c
+   011E DD 70 FD      [19]  361 	ld	-3 (ix),b
+                            362 ;os.c:115: break;
+   0121 18 0E         [12]  363 	jr	00103$
+   0123                     364 00108$:
+                            365 ;os.c:110: for(i=0;i<6;i++){
+   0123 13            [ 6]  366 	inc	de
+   0124 4B            [ 4]  367 	ld	c, e
+   0125 42            [ 4]  368 	ld	b, d
+   0126 7B            [ 4]  369 	ld	a,e
+   0127 D6 06         [ 7]  370 	sub	a, #0x06
+   0129 7A            [ 4]  371 	ld	a,d
+   012A 17            [ 4]  372 	rla
+   012B 3F            [ 4]  373 	ccf
+   012C 1F            [ 4]  374 	rra
+   012D DE 80         [ 7]  375 	sbc	a, #0x80
+   012F 38 A2         [12]  376 	jr	C,00107$
+   0131                     377 00103$:
+                            378 ;os.c:118: j=(n>>15)+6;
+   0131 DD 7E 07      [19]  379 	ld	a,7 (ix)
+   0134 CB 2F         [ 8]  380 	sra	a
+   0136 CB 2F         [ 8]  381 	sra	a
+   0138 CB 2F         [ 8]  382 	sra	a
+   013A CB 2F         [ 8]  383 	sra	a
+   013C CB 2F         [ 8]  384 	sra	a
+   013E CB 2F         [ 8]  385 	sra	a
+   0140 CB 2F         [ 8]  386 	sra	a
+   0142 5F            [ 4]  387 	ld	e,a
+   0143 CB 07         [ 8]  388 	rlc	a
+   0145 9F            [ 4]  389 	sbc	a, a
+   0146 57            [ 4]  390 	ld	d,a
+   0147 21 06 00      [10]  391 	ld	hl,#0x0006
+   014A 19            [11]  392 	add	hl,de
+   014B E3            [19]  393 	ex	(sp), hl
+                            394 ;os.c:119: if(n<0)
+   014C DD CB 07 7E   [20]  395 	bit	7, 7 (ix)
+   0150 28 08         [12]  396 	jr	Z,00118$
+                            397 ;os.c:120: out[0]='-';
+   0152 DD 6E 04      [19]  398 	ld	l,4 (ix)
+   0155 DD 66 05      [19]  399 	ld	h,5 (ix)
+   0158 36 2D         [10]  400 	ld	(hl),#0x2D
+   015A                     401 00118$:
+   015A                     402 00110$:
+                            403 ;os.c:121: for(;i>=0;i--){
+   015A CB 78         [ 8]  404 	bit	7, b
+   015C 20 1D         [12]  405 	jr	NZ,00106$
+                            406 ;os.c:122: out[j-i]=itoa_tmp[i];
+   015E DD 7E FA      [19]  407 	ld	a,-6 (ix)
+   0161 91            [ 4]  408 	sub	a, c
+   0162 5F            [ 4]  409 	ld	e,a
+   0163 DD 7E FB      [19]  410 	ld	a,-5 (ix)
+   0166 98            [ 4]  411 	sbc	a, b
+   0167 57            [ 4]  412 	ld	d,a
+   0168 7B            [ 4]  413 	ld	a,e
+   0169 DD 86 04      [19]  414 	add	a, 4 (ix)
+   016C 5F            [ 4]  415 	ld	e,a
+   016D 7A            [ 4]  416 	ld	a,d
+   016E DD 8E 05      [19]  417 	adc	a, 5 (ix)
+   0171 57            [ 4]  418 	ld	d,a
+   0172 21r02r40      [10]  419 	ld	hl,#_itoa_tmp
+   0175 09            [11]  420 	add	hl,bc
+   0176 7E            [ 7]  421 	ld	a,(hl)
+   0177 12            [ 7]  422 	ld	(de),a
+                            423 ;os.c:121: for(;i>=0;i--){
+   0178 0B            [ 6]  424 	dec	bc
+   0179 18 DF         [12]  425 	jr	00110$
+   017B                     426 00106$:
+                            427 ;os.c:124: return r;
+   017B C1            [10]  428 	pop	bc
+   017C E1            [10]  429 	pop	hl
+   017D E5            [11]  430 	push	hl
+   017E C5            [11]  431 	push	bc
+   017F DD F9         [10]  432 	ld	sp, ix
+   0181 DD E1         [14]  433 	pop	ix
+   0183 C9            [10]  434 	ret
+                            435 ;os.c:126: void sprintf(char* out, char* fmt, int x){
+                            436 ;	---------------------------------
+                            437 ; Function sprintf
+                            438 ; ---------------------------------
+   0184                     439 _sprintf::
+   0184 CDr00r00      [17]  440 	call	___sdcc_enter_ix
+   0187 F5            [11]  441 	push	af
+   0188 F5            [11]  442 	push	af
+   0189 F5            [11]  443 	push	af
+                            444 ;os.c:128: int idx=0;
+   018A 21 00 00      [10]  445 	ld	hl,#0x0000
+   018D E3            [19]  446 	ex	(sp), hl
+                            447 ;os.c:129: for(i=0;fmt[i]!=0;){
+   018E 01 00 00      [10]  448 	ld	bc,#0x0000
+   0191                     449 00115$:
+   0191 DD 6E 06      [19]  450 	ld	l,6 (ix)
+   0194 DD 66 07      [19]  451 	ld	h,7 (ix)
+   0197 09            [11]  452 	add	hl,bc
+   0198 7E            [ 7]  453 	ld	a,(hl)
+   0199 DD 77 FF      [19]  454 	ld	-1 (ix), a
+   019C B7            [ 4]  455 	or	a, a
+   019D CAr29r02      [10]  456 	jp	Z,00117$
+                            457 ;os.c:130: if(fmt[i]=='%'){
+   01A0 DD 7E FF      [19]  458 	ld	a,-1 (ix)
+   01A3 D6 25         [ 7]  459 	sub	a, #0x25
+   01A5 20 64         [12]  460 	jr	NZ,00108$
+                            461 ;os.c:131: i++;
+   01A7 03            [ 6]  462 	inc	bc
+                            463 ;os.c:132: if(fmt[i]=='d'){
+   01A8 DD 6E 06      [19]  464 	ld	l,6 (ix)
+   01AB DD 66 07      [19]  465 	ld	h,7 (ix)
+   01AE 09            [11]  466 	add	hl,bc
+   01AF 66            [ 7]  467 	ld	h,(hl)
+   01B0 7C            [ 4]  468 	ld	a,h
+   01B1 D6 64         [ 7]  469 	sub	a, #0x64
+   01B3 20 18         [12]  470 	jr	NZ,00105$
+                            471 ;os.c:133: itoa(out+i,x);
+   01B5 DD 6E 04      [19]  472 	ld	l,4 (ix)
+   01B8 DD 66 05      [19]  473 	ld	h,5 (ix)
+   01BB 09            [11]  474 	add	hl,bc
+   01BC C5            [11]  475 	push	bc
+   01BD DD 5E 08      [19]  476 	ld	e,8 (ix)
+   01C0 DD 56 09      [19]  477 	ld	d,9 (ix)
+   01C3 D5            [11]  478 	push	de
+   01C4 E5            [11]  479 	push	hl
+   01C5 CDrBFr00      [17]  480 	call	_itoa
+   01C8 F1            [10]  481 	pop	af
+   01C9 F1            [10]  482 	pop	af
+   01CA C1            [10]  483 	pop	bc
+   01CB 18 C4         [12]  484 	jr	00115$
+   01CD                     485 00105$:
+                            486 ;os.c:134: }else if(fmt[i]=='s'){
+   01CD 7C            [ 4]  487 	ld	a,h
+   01CE D6 73         [ 7]  488 	sub	a, #0x73
+   01D0 20 BF         [12]  489 	jr	NZ,00115$
+                            490 ;os.c:135: for(j=0;((char*)x)[j]!=0;j++){
+   01D2 D1            [10]  491 	pop	de
+   01D3 D5            [11]  492 	push	de
+   01D4 DD 36 FC 00   [19]  493 	ld	-4 (ix),#0x00
+   01D8 DD 36 FD 00   [19]  494 	ld	-3 (ix),#0x00
+   01DC                     495 00112$:
+   01DC DD 7E 08      [19]  496 	ld	a, 8 (ix)
+   01DF DD 66 09      [19]  497 	ld	h, 9 (ix)
+   01E2 DD 86 FC      [19]  498 	add	a, -4 (ix)
+   01E5 6F            [ 4]  499 	ld	l,a
+   01E6 7C            [ 4]  500 	ld	a,h
+   01E7 DD 8E FD      [19]  501 	adc	a, -3 (ix)
+   01EA 67            [ 4]  502 	ld	h,a
+   01EB 7E            [ 7]  503 	ld	a,(hl)
+   01EC DD 77 FE      [19]  504 	ld	-2 (ix), a
+   01EF B7            [ 4]  505 	or	a, a
+   01F0 28 9F         [12]  506 	jr	Z,00115$
+                            507 ;os.c:136: out[idx]=((char*)x)[j];
+   01F2 DD 6E 04      [19]  508 	ld	l,4 (ix)
+   01F5 DD 66 05      [19]  509 	ld	h,5 (ix)
+   01F8 19            [11]  510 	add	hl,de
+   01F9 DD 7E FE      [19]  511 	ld	a,-2 (ix)
+   01FC 77            [ 7]  512 	ld	(hl),a
+                            513 ;os.c:137: idx++;
+   01FD 13            [ 6]  514 	inc	de
+   01FE 33            [ 6]  515 	inc	sp
+   01FF 33            [ 6]  516 	inc	sp
+   0200 D5            [11]  517 	push	de
+                            518 ;os.c:135: for(j=0;((char*)x)[j]!=0;j++){
+   0201 DD 34 FC      [23]  519 	inc	-4 (ix)
+   0204 20 D6         [12]  520 	jr	NZ,00112$
+   0206 DD 34 FD      [23]  521 	inc	-3 (ix)
+   0209 18 D1         [12]  522 	jr	00112$
+   020B                     523 00108$:
+                            524 ;os.c:141: out[idx]=fmt[i];
+   020B DD 7E 04      [19]  525 	ld	a,4 (ix)
+   020E DD 86 FA      [19]  526 	add	a, -6 (ix)
+   0211 6F            [ 4]  527 	ld	l,a
+   0212 DD 7E 05      [19]  528 	ld	a,5 (ix)
+   0215 DD 8E FB      [19]  529 	adc	a, -5 (ix)
+   0218 67            [ 4]  530 	ld	h,a
+   0219 DD 7E FF      [19]  531 	ld	a,-1 (ix)
+   021C 77            [ 7]  532 	ld	(hl),a
+                            533 ;os.c:142: idx++;
+   021D DD 34 FA      [23]  534 	inc	-6 (ix)
+   0220 C2r91r01      [10]  535 	jp	NZ,00115$
+   0223 DD 34 FB      [23]  536 	inc	-5 (ix)
+   0226 C3r91r01      [10]  537 	jp	00115$
+   0229                     538 00117$:
+   0229 DD F9         [10]  539 	ld	sp, ix
+   022B DD E1         [14]  540 	pop	ix
+   022D C9            [10]  541 	ret
+                            542 ;os.c:147: void system(char* command){
+                            543 ;	---------------------------------
+                            544 ; Function system
+                            545 ; ---------------------------------
+   022E                     546 _system::
+                            547 ;os.c:149: if(!strcmp(command,"man")){
+   022E 21rE1r02      [10]  548 	ld	hl,#___str_0
+   0231 E5            [11]  549 	push	hl
+   0232 21 04 00      [10]  550 	ld	hl, #4
+   0235 39            [11]  551 	add	hl, sp
+   0236 4E            [ 7]  552 	ld	c, (hl)
+   0237 23            [ 6]  553 	inc	hl
+   0238 46            [ 7]  554 	ld	b, (hl)
+   0239 C5            [11]  555 	push	bc
+   023A CDr07r00      [17]  556 	call	_strcmp
+   023D F1            [10]  557 	pop	af
+   023E F1            [10]  558 	pop	af
+   023F 7D            [ 4]  559 	ld	a,l
+   0240 B7            [ 4]  560 	or	a, a
+   0241 20 09         [12]  561 	jr	NZ,00116$
+                            562 ;os.c:150: println("COMMANDS:\r  shutdown : halt the computer.\r  reboot : reboot the machine.");
+   0243 21rE5r02      [10]  563 	ld	hl,#___str_1
+   0246 E5            [11]  564 	push	hl
+   0247 CDr24r00      [17]  565 	call	_println
+   024A F1            [10]  566 	pop	af
+   024B C9            [10]  567 	ret
+   024C                     568 00116$:
+                            569 ;os.c:151: }else if(!strcmp(command,"shutdown")){
+   024C 21r2Er03      [10]  570 	ld	hl,#___str_2+0
+   024F E5            [11]  571 	push	hl
+   0250 21 04 00      [10]  572 	ld	hl, #4
+   0253 39            [11]  573 	add	hl, sp
+   0254 4E            [ 7]  574 	ld	c, (hl)
+   0255 23            [ 6]  575 	inc	hl
+   0256 46            [ 7]  576 	ld	b, (hl)
+   0257 C5            [11]  577 	push	bc
+   0258 CDr07r00      [17]  578 	call	_strcmp
+   025B F1            [10]  579 	pop	af
+   025C F1            [10]  580 	pop	af
+   025D 7D            [ 4]  581 	ld	a,l
+   025E B7            [ 4]  582 	or	a, a
+   025F 20 02         [12]  583 	jr	NZ,00113$
+                            584 ;os.c:152: while(true);
+   0261                     585 00102$:
+   0261 18 FE         [12]  586 	jr	00102$
+   0263                     587 00113$:
+                            588 ;os.c:153: }else if(!strcmp(command,"reboot")){
+   0263 21r37r03      [10]  589 	ld	hl,#___str_3+0
+   0266 E5            [11]  590 	push	hl
+   0267 21 04 00      [10]  591 	ld	hl, #4
+   026A 39            [11]  592 	add	hl, sp
+   026B 4E            [ 7]  593 	ld	c, (hl)
+   026C 23            [ 6]  594 	inc	hl
+   026D 46            [ 7]  595 	ld	b, (hl)
+   026E C5            [11]  596 	push	bc
+   026F CDr07r00      [17]  597 	call	_strcmp
+   0272 F1            [10]  598 	pop	af
+   0273 F1            [10]  599 	pop	af
+   0274 7D            [ 4]  600 	ld	a,l
+   0275 B7            [ 4]  601 	or	a, a
+   0276 20 04         [12]  602 	jr	NZ,00110$
+                            603 ;os.c:154: __asm jp 0 __endasm;
+   0278 C3 00 00      [10]  604 	jp 0 
+   027B C9            [10]  605 	ret
+   027C                     606 00110$:
+                            607 ;os.c:155: }else if(!strcmp(command,"dext")){
+   027C 21r3Er03      [10]  608 	ld	hl,#___str_4+0
+   027F E5            [11]  609 	push	hl
+   0280 21 04 00      [10]  610 	ld	hl, #4
+   0283 39            [11]  611 	add	hl, sp
+   0284 4E            [ 7]  612 	ld	c, (hl)
+   0285 23            [ 6]  613 	inc	hl
+   0286 46            [ 7]  614 	ld	b, (hl)
+   0287 C5            [11]  615 	push	bc
+   0288 CDr07r00      [17]  616 	call	_strcmp
+   028B F1            [10]  617 	pop	af
+   028C F1            [10]  618 	pop	af
+   028D 7D            [ 4]  619 	ld	a,l
+   028E B7            [ 4]  620 	or	a, a
+   028F 20 0E         [12]  621 	jr	NZ,00107$
+                            622 ;os.c:156: dext(0,NULL);
+   0291 21 6C FE      [10]  623 	ld	hl,#0xFE6C
+   0294 E5            [11]  624 	push	hl
+   0295 21 00 00      [10]  625 	ld	hl,#0x0000
+   0298 E5            [11]  626 	push	hl
+   0299 CDrC9r0C      [17]  627 	call	_dext
+   029C F1            [10]  628 	pop	af
+   029D F1            [10]  629 	pop	af
+   029E C9            [10]  630 	ret
+   029F                     631 00107$:
+                            632 ;os.c:157: }else if(!strcmp(command,"free")){
+   029F 21r43r03      [10]  633 	ld	hl,#___str_5+0
+   02A2 E5            [11]  634 	push	hl
+   02A3 21 04 00      [10]  635 	ld	hl, #4
+   02A6 39            [11]  636 	add	hl, sp
+   02A7 4E            [ 7]  637 	ld	c, (hl)
+   02A8 23            [ 6]  638 	inc	hl
+   02A9 46            [ 7]  639 	ld	b, (hl)
+   02AA C5            [11]  640 	push	bc
+   02AB CDr07r00      [17]  641 	call	_strcmp
+   02AE F1            [10]  642 	pop	af
+   02AF F1            [10]  643 	pop	af
+   02B0 7D            [ 4]  644 	ld	a,l
+   02B1 B7            [ 4]  645 	or	a, a
+   02B2 C0            [11]  646 	ret	NZ
+                            647 ;os.c:158: print("Heap memory free: ");
+   02B3 21r48r03      [10]  648 	ld	hl,#___str_6+0
+   02B6 E5            [11]  649 	push	hl
+   02B7 CDr1Cr00      [17]  650 	call	_print
+                            651 ;os.c:159: buffer=malloc(7);
+   02BA 21 07 00      [10]  652 	ld	hl, #0x0007
+   02BD E3            [19]  653 	ex	(sp),hl
+   02BE CDr3Fr00      [17]  654 	call	_malloc
+   02C1 F1            [10]  655 	pop	af
+   02C2 EB            [ 4]  656 	ex	de,hl
+                            657 ;os.c:160: heap_loc-=7;
+   02C3 21r00r40      [10]  658 	ld	hl,#_heap_loc
+   02C6 7E            [ 7]  659 	ld	a,(hl)
+   02C7 C6 F9         [ 7]  660 	add	a,#0xF9
+   02C9 77            [ 7]  661 	ld	(hl),a
+   02CA 23            [ 6]  662 	inc	hl
+   02CB 7E            [ 7]  663 	ld	a,(hl)
+   02CC CE FF         [ 7]  664 	adc	a,#0xFF
+   02CE 77            [ 7]  665 	ld	(hl),a
+                            666 ;os.c:161: itoa(buffer,memFree());
+   02CF D5            [11]  667 	push	de
+   02D0 CDr61r00      [17]  668 	call	_memFree
+   02D3 D1            [10]  669 	pop	de
+   02D4 D5            [11]  670 	push	de
+   02D5 E5            [11]  671 	push	hl
+   02D6 D5            [11]  672 	push	de
+   02D7 CDrBFr00      [17]  673 	call	_itoa
+   02DA F1            [10]  674 	pop	af
+   02DB F1            [10]  675 	pop	af
+   02DC CDr24r00      [17]  676 	call	_println
+   02DF F1            [10]  677 	pop	af
+   02E0 C9            [10]  678 	ret
+   02E1                     679 ___str_0:
+   02E1 6D 61 6E            680 	.ascii "man"
+   02E4 00                  681 	.db 0x00
+   02E5                     682 ___str_1:
+   02E5 43 4F 4D 4D 41 4E   683 	.ascii "COMMANDS:"
         44 53 3A
-   00B2 0D                  191 	.db 0x0D
-   00B3 20 20 73 68 75 74   192 	.ascii "  shutdown : halt the computer."
+   02EE 0D                  684 	.db 0x0D
+   02EF 20 20 73 68 75 74   685 	.ascii "  shutdown : halt the computer."
         64 6F 77 6E 20 3A
         20 68 61 6C 74 20
         74 68 65 20 63 6F
         6D 70 75 74 65 72
         2E
-   00D2 0D                  193 	.db 0x0D
-   00D3 20 20 72 65 62 6F   194 	.ascii "  reboot : reboot "
+   030E 0D                  686 	.db 0x0D
+   030F 20 20 72 65 62 6F   687 	.ascii "  reboot : reboot "
         6F 74 20 3A 20 72
         65 62 6F 6F 74 20
-   00E5 74 68 65 20 6D 61   195 	.ascii "the machine."
+   0321 74 68 65 20 6D 61   688 	.ascii "the machine."
         63 68 69 6E 65 2E
-   00F1 00                  196 	.db 0x00
-   00F2                     197 ___str_4:
-   00F2 73 68 75 74 64 6F   198 	.ascii "shutdown"
+   032D 00                  689 	.db 0x00
+   032E                     690 ___str_2:
+   032E 73 68 75 74 64 6F   691 	.ascii "shutdown"
         77 6E
-   00FA 00                  199 	.db 0x00
-   00FB                     200 ___str_5:
-   00FB 72 65 62 6F 6F 74   201 	.ascii "reboot"
-   0101 00                  202 	.db 0x00
-                            203 	.area _CODE
-                            204 	.area _INITIALIZER
-                            205 	.area _CABS (ABS)
+   0336 00                  692 	.db 0x00
+   0337                     693 ___str_3:
+   0337 72 65 62 6F 6F 74   694 	.ascii "reboot"
+   033D 00                  695 	.db 0x00
+   033E                     696 ___str_4:
+   033E 64 65 78 74         697 	.ascii "dext"
+   0342 00                  698 	.db 0x00
+   0343                     699 ___str_5:
+   0343 66 72 65 65         700 	.ascii "free"
+   0347 00                  701 	.db 0x00
+   0348                     702 ___str_6:
+   0348 48 65 61 70 20 6D   703 	.ascii "Heap memory free: "
+        65 6D 6F 72 79 20
+        66 72 65 65 3A 20
+   035A 00                  704 	.db 0x00
+                            705 ;dext.c:243: char* toString(var* v){
+                            706 ;	---------------------------------
+                            707 ; Function toString
+                            708 ; ---------------------------------
+   035B                     709 _toString::
+   035B CDr00r00      [17]  710 	call	___sdcc_enter_ix
+   035E F5            [11]  711 	push	af
+                            712 ;dext.c:245: switch(v->type){
+   035F DD 7E 04      [19]  713 	ld	a,4 (ix)
+   0362 DD 77 FE      [19]  714 	ld	-2 (ix),a
+   0365 DD 7E 05      [19]  715 	ld	a,5 (ix)
+   0368 DD 77 FF      [19]  716 	ld	-1 (ix),a
+   036B E1            [10]  717 	pop	hl
+   036C E5            [11]  718 	push	hl
+   036D 23            [ 6]  719 	inc	hl
+   036E 23            [ 6]  720 	inc	hl
+   036F 5E            [ 7]  721 	ld	e,(hl)
+   0370 23            [ 6]  722 	inc	hl
+   0371 56            [ 7]  723 	ld	d,(hl)
+   0372 7B            [ 4]  724 	ld	a,e
+   0373 D6 FF         [ 7]  725 	sub	a, #0xFF
+   0375 7A            [ 4]  726 	ld	a,d
+   0376 17            [ 4]  727 	rla
+   0377 3F            [ 4]  728 	ccf
+   0378 1F            [ 4]  729 	rra
+   0379 DE 7F         [ 7]  730 	sbc	a, #0x7F
+   037B DAr74r04      [10]  731 	jp	C,00108$
+   037E 3E 06         [ 7]  732 	ld	a,#0x06
+   0380 BB            [ 4]  733 	cp	a, e
+   0381 3E 00         [ 7]  734 	ld	a,#0x00
+   0383 9A            [ 4]  735 	sbc	a, d
+   0384 E2r89r03      [10]  736 	jp	PO, 00120$
+   0387 EE 80         [ 7]  737 	xor	a, #0x80
+   0389                     738 00120$:
+   0389 FAr74r04      [10]  739 	jp	M,00108$
+   038C 7B            [ 4]  740 	ld	a,e
+   038D C6 01         [ 7]  741 	add	a,#0x01
+   038F 5F            [ 4]  742 	ld	e,a
+                            743 ;dext.c:250: sprintf(out,"%d",(int)v->data);
+   0390 DD 7E FE      [19]  744 	ld	a,-2 (ix)
+   0393 C6 04         [ 7]  745 	add	a, #0x04
+   0395 4F            [ 4]  746 	ld	c,a
+   0396 DD 7E FF      [19]  747 	ld	a,-1 (ix)
+   0399 CE 00         [ 7]  748 	adc	a, #0x00
+   039B 47            [ 4]  749 	ld	b,a
+                            750 ;dext.c:245: switch(v->type){
+   039C 16 00         [ 7]  751 	ld	d,#0x00
+   039E 21rA5r03      [10]  752 	ld	hl,#00121$
+   03A1 19            [11]  753 	add	hl,de
+   03A2 19            [11]  754 	add	hl,de
+   03A3 19            [11]  755 	add	hl,de
+   03A4 E9            [ 4]  756 	jp	(hl)
+   03A5                     757 00121$:
+   03A5 C3rBDr03      [10]  758 	jp	00101$
+   03A8 C3rC3r03      [10]  759 	jp	00102$
+   03AB C3rE4r03      [10]  760 	jp	00103$
+   03AE C3rECr03      [10]  761 	jp	00104$
+   03B1 C3r74r04      [10]  762 	jp	00108$
+   03B4 C3r19r04      [10]  763 	jp	00105$
+   03B7 C3r46r04      [10]  764 	jp	00106$
+   03BA C3r4Br04      [10]  765 	jp	00107$
+                            766 ;dext.c:246: case VAR_NULL:
+   03BD                     767 00101$:
+                            768 ;dext.c:247: return "null";
+   03BD 21r7Cr04      [10]  769 	ld	hl,#___str_7
+   03C0 C3r78r04      [10]  770 	jp	00110$
+                            771 ;dext.c:248: case VAR_INT:
+   03C3                     772 00102$:
+                            773 ;dext.c:249: out=(char*)malloc(__intlen__);
+   03C3 C5            [11]  774 	push	bc
+   03C4 21 02 00      [10]  775 	ld	hl,#0x0002
+   03C7 E5            [11]  776 	push	hl
+   03C8 CDr3Fr00      [17]  777 	call	_malloc
+   03CB F1            [10]  778 	pop	af
+   03CC C1            [10]  779 	pop	bc
+   03CD EB            [ 4]  780 	ex	de,hl
+                            781 ;dext.c:250: sprintf(out,"%d",(int)v->data);
+   03CE 69            [ 4]  782 	ld	l, c
+   03CF 60            [ 4]  783 	ld	h, b
+   03D0 4E            [ 7]  784 	ld	c,(hl)
+   03D1 23            [ 6]  785 	inc	hl
+   03D2 46            [ 7]  786 	ld	b,(hl)
+   03D3 21r81r04      [10]  787 	ld	hl,#___str_8
+   03D6 D5            [11]  788 	push	de
+   03D7 C5            [11]  789 	push	bc
+   03D8 E5            [11]  790 	push	hl
+   03D9 D5            [11]  791 	push	de
+   03DA CDr84r01      [17]  792 	call	_sprintf
+   03DD F1            [10]  793 	pop	af
+   03DE F1            [10]  794 	pop	af
+   03DF F1            [10]  795 	pop	af
+   03E0 D1            [10]  796 	pop	de
+                            797 ;dext.c:251: break;
+   03E1 C3r77r04      [10]  798 	jp	00109$
+                            799 ;dext.c:252: case VAR_STR:
+   03E4                     800 00103$:
+                            801 ;dext.c:253: out=(char*)v->data;
+   03E4 69            [ 4]  802 	ld	l, c
+   03E5 60            [ 4]  803 	ld	h, b
+   03E6 5E            [ 7]  804 	ld	e,(hl)
+   03E7 23            [ 6]  805 	inc	hl
+   03E8 56            [ 7]  806 	ld	d,(hl)
+                            807 ;dext.c:254: break;
+   03E9 C3r77r04      [10]  808 	jp	00109$
+                            809 ;dext.c:255: case VAR_FILE:
+   03EC                     810 00104$:
+                            811 ;dext.c:256: out=(char*)malloc(6+strlen((char*)v->data));
+   03EC 69            [ 4]  812 	ld	l, c
+   03ED 60            [ 4]  813 	ld	h, b
+   03EE 5E            [ 7]  814 	ld	e,(hl)
+   03EF 23            [ 6]  815 	inc	hl
+   03F0 56            [ 7]  816 	ld	d,(hl)
+   03F1 C5            [11]  817 	push	bc
+   03F2 D5            [11]  818 	push	de
+   03F3 CDr12r00      [17]  819 	call	_strlen
+   03F6 F1            [10]  820 	pop	af
+   03F7 C1            [10]  821 	pop	bc
+   03F8 11 06 00      [10]  822 	ld	de,#0x0006
+   03FB 19            [11]  823 	add	hl,de
+   03FC C5            [11]  824 	push	bc
+   03FD E5            [11]  825 	push	hl
+   03FE CDr3Fr00      [17]  826 	call	_malloc
+   0401 F1            [10]  827 	pop	af
+   0402 C1            [10]  828 	pop	bc
+   0403 EB            [ 4]  829 	ex	de,hl
+                            830 ;dext.c:257: sprintf(out,"File@%s",(int)v->data);
+   0404 69            [ 4]  831 	ld	l, c
+   0405 60            [ 4]  832 	ld	h, b
+   0406 4E            [ 7]  833 	ld	c,(hl)
+   0407 23            [ 6]  834 	inc	hl
+   0408 46            [ 7]  835 	ld	b,(hl)
+   0409 21r84r04      [10]  836 	ld	hl,#___str_9
+   040C D5            [11]  837 	push	de
+   040D C5            [11]  838 	push	bc
+   040E E5            [11]  839 	push	hl
+   040F D5            [11]  840 	push	de
+   0410 CDr84r01      [17]  841 	call	_sprintf
+   0413 F1            [10]  842 	pop	af
+   0414 F1            [10]  843 	pop	af
+   0415 F1            [10]  844 	pop	af
+   0416 D1            [10]  845 	pop	de
+                            846 ;dext.c:258: break;
+   0417 18 5E         [12]  847 	jr	00109$
+                            848 ;dext.c:259: case VAR_DIR:
+   0419                     849 00105$:
+                            850 ;dext.c:260: out=(char*)malloc(8+strlen((char*)v->data));
+   0419 69            [ 4]  851 	ld	l, c
+   041A 60            [ 4]  852 	ld	h, b
+   041B 5E            [ 7]  853 	ld	e,(hl)
+   041C 23            [ 6]  854 	inc	hl
+   041D 56            [ 7]  855 	ld	d,(hl)
+   041E C5            [11]  856 	push	bc
+   041F D5            [11]  857 	push	de
+   0420 CDr12r00      [17]  858 	call	_strlen
+   0423 F1            [10]  859 	pop	af
+   0424 C1            [10]  860 	pop	bc
+   0425 11 08 00      [10]  861 	ld	de,#0x0008
+   0428 19            [11]  862 	add	hl,de
+   0429 C5            [11]  863 	push	bc
+   042A E5            [11]  864 	push	hl
+   042B CDr3Fr00      [17]  865 	call	_malloc
+   042E F1            [10]  866 	pop	af
+   042F C1            [10]  867 	pop	bc
+   0430 EB            [ 4]  868 	ex	de,hl
+                            869 ;dext.c:261: sprintf(out,"Folder@%s",(int)v->data);
+   0431 69            [ 4]  870 	ld	l, c
+   0432 60            [ 4]  871 	ld	h, b
+   0433 4E            [ 7]  872 	ld	c,(hl)
+   0434 23            [ 6]  873 	inc	hl
+   0435 46            [ 7]  874 	ld	b,(hl)
+   0436 21r8Cr04      [10]  875 	ld	hl,#___str_10
+   0439 D5            [11]  876 	push	de
+   043A C5            [11]  877 	push	bc
+   043B E5            [11]  878 	push	hl
+   043C D5            [11]  879 	push	de
+   043D CDr84r01      [17]  880 	call	_sprintf
+   0440 F1            [10]  881 	pop	af
+   0441 F1            [10]  882 	pop	af
+   0442 F1            [10]  883 	pop	af
+   0443 D1            [10]  884 	pop	de
+                            885 ;dext.c:262: break;
+   0444 18 31         [12]  886 	jr	00109$
+                            887 ;dext.c:263: case VAR_ANM:
+   0446                     888 00106$:
+                            889 ;dext.c:264: out="[Animation]";
+   0446 11r96r04      [10]  890 	ld	de,#___str_11+0
+                            891 ;dext.c:265: break;
+   0449 18 2C         [12]  892 	jr	00109$
+                            893 ;dext.c:266: case VAR_CMD:
+   044B                     894 00107$:
+                            895 ;dext.c:267: out=(char*)malloc(5+strlen((char*)v->data));
+   044B 69            [ 4]  896 	ld	l, c
+   044C 60            [ 4]  897 	ld	h, b
+   044D 5E            [ 7]  898 	ld	e,(hl)
+   044E 23            [ 6]  899 	inc	hl
+   044F 56            [ 7]  900 	ld	d,(hl)
+   0450 D5            [11]  901 	push	de
+   0451 CDr12r00      [17]  902 	call	_strlen
+   0454 F1            [10]  903 	pop	af
+   0455 01 05 00      [10]  904 	ld	bc,#0x0005
+   0458 09            [11]  905 	add	hl,bc
+   0459 E5            [11]  906 	push	hl
+   045A CDr3Fr00      [17]  907 	call	_malloc
+   045D F1            [10]  908 	pop	af
+   045E EB            [ 4]  909 	ex	de,hl
+                            910 ;dext.c:268: sprintf(out,"CMD@%s",(int)v->name);
+   045F E1            [10]  911 	pop	hl
+   0460 E5            [11]  912 	push	hl
+   0461 4E            [ 7]  913 	ld	c,(hl)
+   0462 23            [ 6]  914 	inc	hl
+   0463 46            [ 7]  915 	ld	b,(hl)
+   0464 21rA2r04      [10]  916 	ld	hl,#___str_12
+   0467 D5            [11]  917 	push	de
+   0468 C5            [11]  918 	push	bc
+   0469 E5            [11]  919 	push	hl
+   046A D5            [11]  920 	push	de
+   046B CDr84r01      [17]  921 	call	_sprintf
+   046E F1            [10]  922 	pop	af
+   046F F1            [10]  923 	pop	af
+   0470 F1            [10]  924 	pop	af
+   0471 D1            [10]  925 	pop	de
+                            926 ;dext.c:269: break;
+   0472 18 03         [12]  927 	jr	00109$
+                            928 ;dext.c:270: default:
+   0474                     929 00108$:
+                            930 ;dext.c:271: out="Unknown Variable Type";
+   0474 11rA9r04      [10]  931 	ld	de,#___str_13+0
+                            932 ;dext.c:272: }
+   0477                     933 00109$:
+                            934 ;dext.c:273: return out;
+   0477 EB            [ 4]  935 	ex	de,hl
+   0478                     936 00110$:
+   0478 F1            [10]  937 	pop	af
+   0479 DD E1         [14]  938 	pop	ix
+   047B C9            [10]  939 	ret
+   047C                     940 ___str_7:
+   047C 6E 75 6C 6C         941 	.ascii "null"
+   0480 00                  942 	.db 0x00
+   0481                     943 ___str_8:
+   0481 25 64               944 	.ascii "%d"
+   0483 00                  945 	.db 0x00
+   0484                     946 ___str_9:
+   0484 46 69 6C 65 40 25   947 	.ascii "File@%s"
+        73
+   048B 00                  948 	.db 0x00
+   048C                     949 ___str_10:
+   048C 46 6F 6C 64 65 72   950 	.ascii "Folder@%s"
+        40 25 73
+   0495 00                  951 	.db 0x00
+   0496                     952 ___str_11:
+   0496 5B 41 6E 69 6D 61   953 	.ascii "[Animation]"
+        74 69 6F 6E 5D
+   04A1 00                  954 	.db 0x00
+   04A2                     955 ___str_12:
+   04A2 43 4D 44 40 25 73   956 	.ascii "CMD@%s"
+   04A8 00                  957 	.db 0x00
+   04A9                     958 ___str_13:
+   04A9 55 6E 6B 6E 6F 77   959 	.ascii "Unknown Variable Type"
+        6E 20 56 61 72 69
+        61 62 6C 65 20 54
+        79 70 65
+   04BE 00                  960 	.db 0x00
+                            961 ;dext.c:279: void addVariable(var* v){
+                            962 ;	---------------------------------
+                            963 ; Function addVariable
+                            964 ; ---------------------------------
+   04BF                     965 _addVariable::
+   04BF CDr00r00      [17]  966 	call	___sdcc_enter_ix
+   04C2 F5            [11]  967 	push	af
+   04C3 F5            [11]  968 	push	af
+                            969 ;dext.c:280: var** tmp=(var**)malloc(sizeof(var)*(num_vars+1));
+   04C4 2Ar09r40      [16]  970 	ld	hl,(_num_vars)
+   04C7 23            [ 6]  971 	inc	hl
+   04C8 4D            [ 4]  972 	ld	c, l
+   04C9 44            [ 4]  973 	ld	b, h
+   04CA 29            [11]  974 	add	hl, hl
+   04CB 09            [11]  975 	add	hl, bc
+   04CC 29            [11]  976 	add	hl, hl
+   04CD E5            [11]  977 	push	hl
+   04CE CDr3Fr00      [17]  978 	call	_malloc
+   04D1 F1            [10]  979 	pop	af
+   04D2 4D            [ 4]  980 	ld	c, l
+   04D3 44            [ 4]  981 	ld	b, h
+                            982 ;dext.c:282: for(i=0;i<num_vars;i++){
+   04D4 21 00 00      [10]  983 	ld	hl,#0x0000
+   04D7 E3            [19]  984 	ex	(sp), hl
+   04D8                     985 00103$:
+   04D8 21r09r40      [10]  986 	ld	hl,#_num_vars
+   04DB DD 7E FC      [19]  987 	ld	a,-4 (ix)
+   04DE 96            [ 7]  988 	sub	a, (hl)
+   04DF DD 7E FD      [19]  989 	ld	a,-3 (ix)
+   04E2 23            [ 6]  990 	inc	hl
+   04E3 9E            [ 7]  991 	sbc	a, (hl)
+   04E4 E2rE9r04      [10]  992 	jp	PO, 00116$
+   04E7 EE 80         [ 7]  993 	xor	a, #0x80
+   04E9                     994 00116$:
+   04E9 F2r1Br05      [10]  995 	jp	P,00101$
+                            996 ;dext.c:283: tmp[i]=vars[i];
+   04EC D1            [10]  997 	pop	de
+   04ED D5            [11]  998 	push	de
+   04EE CB 23         [ 8]  999 	sla	e
+   04F0 CB 12         [ 8] 1000 	rl	d
+   04F2 79            [ 4] 1001 	ld	a,c
+   04F3 83            [ 4] 1002 	add	a, e
+   04F4 DD 77 FE      [19] 1003 	ld	-2 (ix),a
+   04F7 78            [ 4] 1004 	ld	a,b
+   04F8 8A            [ 4] 1005 	adc	a, d
+   04F9 DD 77 FF      [19] 1006 	ld	-1 (ix),a
+   04FC FD 2Ar0Br40   [20] 1007 	ld	iy,(_vars)
+   0500 FD 19         [15] 1008 	add	iy, de
+   0502 FD 56 00      [19] 1009 	ld	d,0 (iy)
+   0505 FD 5E 01      [19] 1010 	ld	e,1 (iy)
+   0508 DD 6E FE      [19] 1011 	ld	l,-2 (ix)
+   050B DD 66 FF      [19] 1012 	ld	h,-1 (ix)
+   050E 72            [ 7] 1013 	ld	(hl),d
+   050F 23            [ 6] 1014 	inc	hl
+   0510 73            [ 7] 1015 	ld	(hl),e
+                           1016 ;dext.c:282: for(i=0;i<num_vars;i++){
+   0511 DD 34 FC      [23] 1017 	inc	-4 (ix)
+   0514 20 C2         [12] 1018 	jr	NZ,00103$
+   0516 DD 34 FD      [23] 1019 	inc	-3 (ix)
+   0519 18 BD         [12] 1020 	jr	00103$
+   051B                    1021 00101$:
+                           1022 ;dext.c:285: tmp[num_vars]=v;
+   051B 2Ar09r40      [16] 1023 	ld	hl,(_num_vars)
+   051E 29            [11] 1024 	add	hl, hl
+   051F 09            [11] 1025 	add	hl,bc
+   0520 DD 7E 04      [19] 1026 	ld	a,4 (ix)
+   0523 77            [ 7] 1027 	ld	(hl),a
+   0524 23            [ 6] 1028 	inc	hl
+   0525 DD 7E 05      [19] 1029 	ld	a,5 (ix)
+   0528 77            [ 7] 1030 	ld	(hl),a
+                           1031 ;dext.c:286: vars=tmp;
+   0529 ED 43r0Br40   [20] 1032 	ld	(_vars),bc
+                           1033 ;dext.c:287: num_vars++;
+   052D 21r09r40      [10] 1034 	ld	hl, #_num_vars+0
+   0530 34            [11] 1035 	inc	(hl)
+   0531 20 04         [12] 1036 	jr	NZ,00120$
+   0533 21r0Ar40      [10] 1037 	ld	hl, #_num_vars+1
+   0536 34            [11] 1038 	inc	(hl)
+   0537                    1039 00120$:
+   0537 DD F9         [10] 1040 	ld	sp, ix
+   0539 DD E1         [14] 1041 	pop	ix
+   053B C9            [10] 1042 	ret
+                           1043 ;dext.c:289: var* getVar(char* name){
+                           1044 ;	---------------------------------
+                           1045 ; Function getVar
+                           1046 ; ---------------------------------
+   053C                    1047 _getVar::
+   053C CDr00r00      [17] 1048 	call	___sdcc_enter_ix
+                           1049 ;dext.c:291: for(i=0;i<num_vars;i++){
+   053F 11 00 00      [10] 1050 	ld	de,#0x0000
+   0542                    1051 00105$:
+   0542 21r09r40      [10] 1052 	ld	hl,#_num_vars
+   0545 7B            [ 4] 1053 	ld	a,e
+   0546 96            [ 7] 1054 	sub	a, (hl)
+   0547 7A            [ 4] 1055 	ld	a,d
+   0548 23            [ 6] 1056 	inc	hl
+   0549 9E            [ 7] 1057 	sbc	a, (hl)
+   054A E2r4Fr05      [10] 1058 	jp	PO, 00121$
+   054D EE 80         [ 7] 1059 	xor	a, #0x80
+   054F                    1060 00121$:
+   054F F2r8Ar05      [10] 1061 	jp	P,00103$
+                           1062 ;dext.c:292: if(!strcmp(name,vars[i]->name)){
+   0552 4B            [ 4] 1063 	ld	c, e
+   0553 42            [ 4] 1064 	ld	b, d
+   0554 CB 21         [ 8] 1065 	sla	c
+   0556 CB 10         [ 8] 1066 	rl	b
+   0558 FD 2Ar0Br40   [20] 1067 	ld	iy,(_vars)
+   055C FD 09         [15] 1068 	add	iy, bc
+   055E FD 6E 00      [19] 1069 	ld	l,0 (iy)
+   0561 FD 66 01      [19] 1070 	ld	h,1 (iy)
+   0564 7E            [ 7] 1071 	ld	a, (hl)
+   0565 23            [ 6] 1072 	inc	hl
+   0566 66            [ 7] 1073 	ld	h,(hl)
+   0567 6F            [ 4] 1074 	ld	l,a
+   0568 C5            [11] 1075 	push	bc
+   0569 D5            [11] 1076 	push	de
+   056A E5            [11] 1077 	push	hl
+   056B DD 6E 04      [19] 1078 	ld	l,4 (ix)
+   056E DD 66 05      [19] 1079 	ld	h,5 (ix)
+   0571 E5            [11] 1080 	push	hl
+   0572 CDr07r00      [17] 1081 	call	_strcmp
+   0575 F1            [10] 1082 	pop	af
+   0576 F1            [10] 1083 	pop	af
+   0577 7D            [ 4] 1084 	ld	a,l
+   0578 D1            [10] 1085 	pop	de
+   0579 C1            [10] 1086 	pop	bc
+   057A B7            [ 4] 1087 	or	a, a
+   057B 20 0A         [12] 1088 	jr	NZ,00106$
+                           1089 ;dext.c:293: return vars[i];
+   057D 2Ar0Br40      [16] 1090 	ld	hl,(_vars)
+   0580 09            [11] 1091 	add	hl,bc
+   0581 7E            [ 7] 1092 	ld	a, (hl)
+   0582 23            [ 6] 1093 	inc	hl
+   0583 66            [ 7] 1094 	ld	h,(hl)
+   0584 6F            [ 4] 1095 	ld	l,a
+   0585 18 06         [12] 1096 	jr	00107$
+   0587                    1097 00106$:
+                           1098 ;dext.c:291: for(i=0;i<num_vars;i++){
+   0587 13            [ 6] 1099 	inc	de
+   0588 18 B8         [12] 1100 	jr	00105$
+   058A                    1101 00103$:
+                           1102 ;dext.c:296: return &nil;
+   058A 21r0Dr40      [10] 1103 	ld	hl,#_nil
+   058D                    1104 00107$:
+   058D DD E1         [14] 1105 	pop	ix
+   058F C9            [10] 1106 	ret
+                           1107 ;dext.c:298: char* readText(int*idx){
+                           1108 ;	---------------------------------
+                           1109 ; Function readText
+                           1110 ; ---------------------------------
+   0590                    1111 _readText::
+   0590 CDr00r00      [17] 1112 	call	___sdcc_enter_ix
+   0593 F5            [11] 1113 	push	af
+   0594 F5            [11] 1114 	push	af
+                           1115 ;dext.c:302: for(i=0;(raw[idx[0]+i]<='Z'&&raw[idx[0]+i]>='A')||(raw[idx[0]+i]<='z'&&raw[idx[0]+i]>='a');i++)
+   0595 DD 7E 04      [19] 1116 	ld	a,4 (ix)
+   0598 DD 77 FE      [19] 1117 	ld	-2 (ix),a
+   059B DD 7E 05      [19] 1118 	ld	a,5 (ix)
+   059E DD 77 FF      [19] 1119 	ld	-1 (ix),a
+   05A1 01 01 00      [10] 1120 	ld	bc,#0x0001
+   05A4 11 00 00      [10] 1121 	ld	de,#0x0000
+   05A7                    1122 00107$:
+   05A7 DD 6E FE      [19] 1123 	ld	l,-2 (ix)
+   05AA DD 66 FF      [19] 1124 	ld	h,-1 (ix)
+   05AD 7E            [ 7] 1125 	ld	a, (hl)
+   05AE 23            [ 6] 1126 	inc	hl
+   05AF 66            [ 7] 1127 	ld	h,(hl)
+   05B0 6F            [ 4] 1128 	ld	l,a
+   05B1 19            [11] 1129 	add	hl, de
+   05B2 E5            [11] 1130 	push	hl
+   05B3 FD E1         [14] 1131 	pop	iy
+   05B5 C5            [11] 1132 	push	bc
+   05B6 ED 4Br13r40   [20] 1133 	ld	bc,(_raw)
+   05BA FD 09         [15] 1134 	add	iy, bc
+   05BC C1            [10] 1135 	pop	bc
+   05BD FD 66 00      [19] 1136 	ld	h, 0 (iy)
+   05C0 3E 5A         [ 7] 1137 	ld	a,#0x5A
+   05C2 94            [ 4] 1138 	sub	a, h
+   05C3 E2rC8r05      [10] 1139 	jp	PO, 00143$
+   05C6 EE 80         [ 7] 1140 	xor	a, #0x80
+   05C8                    1141 00143$:
+   05C8 FArD2r05      [10] 1142 	jp	M,00105$
+   05CB 7C            [ 4] 1143 	ld	a,h
+   05CC EE 80         [ 7] 1144 	xor	a, #0x80
+   05CE D6 C1         [ 7] 1145 	sub	a, #0xC1
+   05D0 30 12         [12] 1146 	jr	NC,00106$
+   05D2                    1147 00105$:
+   05D2 3E 7A         [ 7] 1148 	ld	a,#0x7A
+   05D4 94            [ 4] 1149 	sub	a, h
+   05D5 E2rDAr05      [10] 1150 	jp	PO, 00144$
+   05D8 EE 80         [ 7] 1151 	xor	a, #0x80
+   05DA                    1152 00144$:
+   05DA FArE8r05      [10] 1153 	jp	M,00101$
+   05DD 7C            [ 4] 1154 	ld	a,h
+   05DE EE 80         [ 7] 1155 	xor	a, #0x80
+   05E0 D6 E1         [ 7] 1156 	sub	a, #0xE1
+   05E2 38 04         [12] 1157 	jr	C,00101$
+   05E4                    1158 00106$:
+                           1159 ;dext.c:303: l++;
+   05E4 03            [ 6] 1160 	inc	bc
+                           1161 ;dext.c:302: for(i=0;(raw[idx[0]+i]<='Z'&&raw[idx[0]+i]>='A')||(raw[idx[0]+i]<='z'&&raw[idx[0]+i]>='a');i++)
+   05E5 13            [ 6] 1162 	inc	de
+   05E6 18 BF         [12] 1163 	jr	00107$
+   05E8                    1164 00101$:
+                           1165 ;dext.c:304: quepie=(char*)malloc(l);
+   05E8 C5            [11] 1166 	push	bc
+   05E9 CDr3Fr00      [17] 1167 	call	_malloc
+   05EC F1            [10] 1168 	pop	af
+   05ED 33            [ 6] 1169 	inc	sp
+   05EE 33            [ 6] 1170 	inc	sp
+   05EF E5            [11] 1171 	push	hl
+                           1172 ;dext.c:305: for(i=0;(raw[idx[0]]<='Z'&&raw[idx[0]]>='A')||(raw[idx[0]]<='z'&&raw[idx[0]]>='a');idx[0]++){
+   05F0 01 00 00      [10] 1173 	ld	bc,#0x0000
+   05F3                    1174 00113$:
+                           1175 ;dext.c:302: for(i=0;(raw[idx[0]+i]<='Z'&&raw[idx[0]+i]>='A')||(raw[idx[0]+i]<='z'&&raw[idx[0]+i]>='a');i++)
+   05F3 DD 6E FE      [19] 1176 	ld	l,-2 (ix)
+   05F6 DD 66 FF      [19] 1177 	ld	h,-1 (ix)
+   05F9 5E            [ 7] 1178 	ld	e,(hl)
+   05FA 23            [ 6] 1179 	inc	hl
+   05FB 56            [ 7] 1180 	ld	d,(hl)
+                           1181 ;dext.c:305: for(i=0;(raw[idx[0]]<='Z'&&raw[idx[0]]>='A')||(raw[idx[0]]<='z'&&raw[idx[0]]>='a');idx[0]++){
+   05FC FD 2Ar13r40   [20] 1182 	ld	iy,(_raw)
+   0600 FD 19         [15] 1183 	add	iy, de
+   0602 FD 56 00      [19] 1184 	ld	d, 0 (iy)
+                           1185 ;dext.c:306: quepie[i]=raw[idx[0]];
+   0605 E1            [10] 1186 	pop	hl
+   0606 E5            [11] 1187 	push	hl
+   0607 09            [11] 1188 	add	hl,bc
+                           1189 ;dext.c:305: for(i=0;(raw[idx[0]]<='Z'&&raw[idx[0]]>='A')||(raw[idx[0]]<='z'&&raw[idx[0]]>='a');idx[0]++){
+   0608 3E 5A         [ 7] 1190 	ld	a,#0x5A
+   060A 92            [ 4] 1191 	sub	a, d
+   060B E2r10r06      [10] 1192 	jp	PO, 00145$
+   060E EE 80         [ 7] 1193 	xor	a, #0x80
+   0610                    1194 00145$:
+   0610 FAr1Ar06      [10] 1195 	jp	M,00111$
+   0613 7A            [ 4] 1196 	ld	a,d
+   0614 EE 80         [ 7] 1197 	xor	a, #0x80
+   0616 D6 C1         [ 7] 1198 	sub	a, #0xC1
+   0618 30 12         [12] 1199 	jr	NC,00112$
+   061A                    1200 00111$:
+   061A 3E 7A         [ 7] 1201 	ld	a,#0x7A
+   061C 92            [ 4] 1202 	sub	a, d
+   061D E2r22r06      [10] 1203 	jp	PO, 00146$
+   0620 EE 80         [ 7] 1204 	xor	a, #0x80
+   0622                    1205 00146$:
+   0622 FAr43r06      [10] 1206 	jp	M,00102$
+   0625 7A            [ 4] 1207 	ld	a,d
+   0626 EE 80         [ 7] 1208 	xor	a, #0x80
+   0628 D6 E1         [ 7] 1209 	sub	a, #0xE1
+   062A 38 17         [12] 1210 	jr	C,00102$
+   062C                    1211 00112$:
+                           1212 ;dext.c:306: quepie[i]=raw[idx[0]];
+   062C 72            [ 7] 1213 	ld	(hl),d
+                           1214 ;dext.c:307: i++;
+   062D 03            [ 6] 1215 	inc	bc
+                           1216 ;dext.c:305: for(i=0;(raw[idx[0]]<='Z'&&raw[idx[0]]>='A')||(raw[idx[0]]<='z'&&raw[idx[0]]>='a');idx[0]++){
+   062E DD 6E FE      [19] 1217 	ld	l,-2 (ix)
+   0631 DD 66 FF      [19] 1218 	ld	h,-1 (ix)
+   0634 5E            [ 7] 1219 	ld	e,(hl)
+   0635 23            [ 6] 1220 	inc	hl
+   0636 56            [ 7] 1221 	ld	d,(hl)
+   0637 13            [ 6] 1222 	inc	de
+   0638 DD 6E FE      [19] 1223 	ld	l,-2 (ix)
+   063B DD 66 FF      [19] 1224 	ld	h,-1 (ix)
+   063E 73            [ 7] 1225 	ld	(hl),e
+   063F 23            [ 6] 1226 	inc	hl
+   0640 72            [ 7] 1227 	ld	(hl),d
+   0641 18 B0         [12] 1228 	jr	00113$
+   0643                    1229 00102$:
+                           1230 ;dext.c:309: quepie[i]=0;
+   0643 36 00         [10] 1231 	ld	(hl),#0x00
+                           1232 ;dext.c:310: return quepie;
+   0645 E1            [10] 1233 	pop	hl
+   0646 E5            [11] 1234 	push	hl
+   0647 DD F9         [10] 1235 	ld	sp, ix
+   0649 DD E1         [14] 1236 	pop	ix
+   064B C9            [10] 1237 	ret
+                           1238 ;dext.c:312: int readNumber(int*idx){
+                           1239 ;	---------------------------------
+                           1240 ; Function readNumber
+                           1241 ; ---------------------------------
+   064C                    1242 _readNumber::
+   064C CDr00r00      [17] 1243 	call	___sdcc_enter_ix
+   064F F5            [11] 1244 	push	af
+   0650 F5            [11] 1245 	push	af
+   0651 F5            [11] 1246 	push	af
+                           1247 ;dext.c:316: for(i=0;(raw[idx[0]+i]!=' '&&raw[idx[0]+i]!='\r'&&raw[idx[0]+i]!='\n'&&raw[idx[0]+i]!='\t'&&raw[idx[0]+i]!=0);i++)
+   0652 DD 7E 04      [19] 1248 	ld	a,4 (ix)
+   0655 DD 77 FE      [19] 1249 	ld	-2 (ix),a
+   0658 DD 7E 05      [19] 1250 	ld	a,5 (ix)
+   065B DD 77 FF      [19] 1251 	ld	-1 (ix),a
+   065E 11 01 00      [10] 1252 	ld	de,#0x0001
+   0661 21 00 00      [10] 1253 	ld	hl,#0x0000
+   0664 E3            [19] 1254 	ex	(sp), hl
+   0665                    1255 00108$:
+   0665 DD 6E FE      [19] 1256 	ld	l,-2 (ix)
+   0668 DD 66 FF      [19] 1257 	ld	h,-1 (ix)
+   066B 46            [ 7] 1258 	ld	b,(hl)
+   066C 23            [ 6] 1259 	inc	hl
+   066D 66            [ 7] 1260 	ld	h,(hl)
+   066E DD 7E FA      [19] 1261 	ld	a,-6 (ix)
+   0671 80            [ 4] 1262 	add	a, b
+   0672 4F            [ 4] 1263 	ld	c,a
+   0673 DD 7E FB      [19] 1264 	ld	a,-5 (ix)
+   0676 8C            [ 4] 1265 	adc	a, h
+   0677 47            [ 4] 1266 	ld	b,a
+   0678 FD 2Ar13r40   [20] 1267 	ld	iy,(_raw)
+   067C FD 09         [15] 1268 	add	iy, bc
+   067E FD 7E 00      [19] 1269 	ld	a, 0 (iy)
+   0681 FE 20         [ 7] 1270 	cp	a,#0x20
+   0683 28 1A         [12] 1271 	jr	Z,00101$
+   0685 FE 0D         [ 7] 1272 	cp	a,#0x0D
+   0687 28 16         [12] 1273 	jr	Z,00101$
+   0689 FE 0A         [ 7] 1274 	cp	a,#0x0A
+   068B 28 12         [12] 1275 	jr	Z,00101$
+   068D FE 09         [ 7] 1276 	cp	a,#0x09
+   068F 28 0E         [12] 1277 	jr	Z,00101$
+   0691 B7            [ 4] 1278 	or	a, a
+   0692 28 0B         [12] 1279 	jr	Z,00101$
+                           1280 ;dext.c:317: l++;
+   0694 13            [ 6] 1281 	inc	de
+                           1282 ;dext.c:316: for(i=0;(raw[idx[0]+i]!=' '&&raw[idx[0]+i]!='\r'&&raw[idx[0]+i]!='\n'&&raw[idx[0]+i]!='\t'&&raw[idx[0]+i]!=0);i++)
+   0695 DD 34 FA      [23] 1283 	inc	-6 (ix)
+   0698 20 CB         [12] 1284 	jr	NZ,00108$
+   069A DD 34 FB      [23] 1285 	inc	-5 (ix)
+   069D 18 C6         [12] 1286 	jr	00108$
+   069F                    1287 00101$:
+                           1288 ;dext.c:318: quepie=(char*)malloc(l);
+   069F D5            [11] 1289 	push	de
+   06A0 CDr3Fr00      [17] 1290 	call	_malloc
+   06A3 F1            [10] 1291 	pop	af
+   06A4 DD 75 FC      [19] 1292 	ld	-4 (ix),l
+   06A7 DD 74 FD      [19] 1293 	ld	-3 (ix),h
+                           1294 ;dext.c:319: for(i=0;(raw[idx[0]]!=' '&&raw[idx[0]]!='\r'&&raw[idx[0]]!='\n'&&raw[idx[0]]!='\t'&&raw[idx[0]]!=0);idx[0]++){
+   06AA 01 00 00      [10] 1295 	ld	bc,#0x0000
+   06AD                    1296 00115$:
+   06AD DD 6E FE      [19] 1297 	ld	l,-2 (ix)
+   06B0 DD 66 FF      [19] 1298 	ld	h,-1 (ix)
+   06B3 5E            [ 7] 1299 	ld	e,(hl)
+   06B4 23            [ 6] 1300 	inc	hl
+   06B5 56            [ 7] 1301 	ld	d,(hl)
+   06B6 FD 2Ar13r40   [20] 1302 	ld	iy,(_raw)
+   06BA FD 19         [15] 1303 	add	iy, de
+   06BC FD 56 00      [19] 1304 	ld	d, 0 (iy)
+                           1305 ;dext.c:320: quepie[i]=raw[idx[0]];
+   06BF DD 6E FC      [19] 1306 	ld	l,-4 (ix)
+   06C2 DD 66 FD      [19] 1307 	ld	h,-3 (ix)
+   06C5 09            [11] 1308 	add	hl,bc
+                           1309 ;dext.c:319: for(i=0;(raw[idx[0]]!=' '&&raw[idx[0]]!='\r'&&raw[idx[0]]!='\n'&&raw[idx[0]]!='\t'&&raw[idx[0]]!=0);idx[0]++){
+   06C6 7A            [ 4] 1310 	ld	a,d
+   06C7 FE 20         [ 7] 1311 	cp	a,#0x20
+   06C9 28 26         [12] 1312 	jr	Z,00102$
+   06CB FE 0D         [ 7] 1313 	cp	a,#0x0D
+   06CD 28 22         [12] 1314 	jr	Z,00102$
+   06CF FE 0A         [ 7] 1315 	cp	a,#0x0A
+   06D1 28 1E         [12] 1316 	jr	Z,00102$
+   06D3 FE 09         [ 7] 1317 	cp	a,#0x09
+   06D5 28 1A         [12] 1318 	jr	Z,00102$
+   06D7 B7            [ 4] 1319 	or	a, a
+   06D8 28 17         [12] 1320 	jr	Z,00102$
+                           1321 ;dext.c:320: quepie[i]=raw[idx[0]];
+   06DA 72            [ 7] 1322 	ld	(hl),d
+                           1323 ;dext.c:321: i++;
+   06DB 03            [ 6] 1324 	inc	bc
+                           1325 ;dext.c:319: for(i=0;(raw[idx[0]]!=' '&&raw[idx[0]]!='\r'&&raw[idx[0]]!='\n'&&raw[idx[0]]!='\t'&&raw[idx[0]]!=0);idx[0]++){
+   06DC DD 6E FE      [19] 1326 	ld	l,-2 (ix)
+   06DF DD 66 FF      [19] 1327 	ld	h,-1 (ix)
+   06E2 5E            [ 7] 1328 	ld	e,(hl)
+   06E3 23            [ 6] 1329 	inc	hl
+   06E4 56            [ 7] 1330 	ld	d,(hl)
+   06E5 13            [ 6] 1331 	inc	de
+   06E6 DD 6E FE      [19] 1332 	ld	l,-2 (ix)
+   06E9 DD 66 FF      [19] 1333 	ld	h,-1 (ix)
+   06EC 73            [ 7] 1334 	ld	(hl),e
+   06ED 23            [ 6] 1335 	inc	hl
+   06EE 72            [ 7] 1336 	ld	(hl),d
+   06EF 18 BC         [12] 1337 	jr	00115$
+   06F1                    1338 00102$:
+                           1339 ;dext.c:323: quepie[i]=0;
+   06F1 36 00         [10] 1340 	ld	(hl),#0x00
+                           1341 ;dext.c:324: return atoi(quepie);
+   06F3 C1            [10] 1342 	pop	bc
+   06F4 E1            [10] 1343 	pop	hl
+   06F5 E5            [11] 1344 	push	hl
+   06F6 C5            [11] 1345 	push	bc
+   06F7 E5            [11] 1346 	push	hl
+   06F8 CDr6Fr00      [17] 1347 	call	_atoi
+   06FB DD F9         [10] 1348 	ld	sp,ix
+   06FD DD E1         [14] 1349 	pop	ix
+   06FF C9            [10] 1350 	ret
+                           1351 ;dext.c:327: var* resolveExpression(int*idx){
+                           1352 ;	---------------------------------
+                           1353 ; Function resolveExpression
+                           1354 ; ---------------------------------
+   0700                    1355 _resolveExpression::
+   0700 CDr00r00      [17] 1356 	call	___sdcc_enter_ix
+   0703 21 F1 FF      [10] 1357 	ld	hl,#-15
+   0706 39            [11] 1358 	add	hl,sp
+   0707 F9            [ 6] 1359 	ld	sp,hl
+                           1360 ;dext.c:328: char a=raw[idx[0]];
+   0708 DD 7E 04      [19] 1361 	ld	a,4 (ix)
+   070B DD 77 FE      [19] 1362 	ld	-2 (ix),a
+   070E DD 7E 05      [19] 1363 	ld	a,5 (ix)
+   0711 DD 77 FF      [19] 1364 	ld	-1 (ix),a
+   0714 DD 6E FE      [19] 1365 	ld	l,-2 (ix)
+   0717 DD 66 FF      [19] 1366 	ld	h,-1 (ix)
+   071A 5E            [ 7] 1367 	ld	e,(hl)
+   071B 23            [ 6] 1368 	inc	hl
+   071C 56            [ 7] 1369 	ld	d,(hl)
+   071D 2Ar13r40      [16] 1370 	ld	hl,(_raw)
+   0720 19            [11] 1371 	add	hl,de
+   0721 7E            [ 7] 1372 	ld	a,(hl)
+   0722 DD 77 F7      [19] 1373 	ld	-9 (ix),a
+                           1374 ;dext.c:329: var* out=(var*)malloc(sizeof(var));
+   0725 21 06 00      [10] 1375 	ld	hl,#0x0006
+   0728 E5            [11] 1376 	push	hl
+   0729 CDr3Fr00      [17] 1377 	call	_malloc
+   072C F1            [10] 1378 	pop	af
+   072D DD 75 F5      [19] 1379 	ld	-11 (ix),l
+   0730 DD 74 F6      [19] 1380 	ld	-10 (ix),h
+                           1381 ;dext.c:337: out->type=VAR_DIR;
+   0733 DD 7E F5      [19] 1382 	ld	a,-11 (ix)
+   0736 C6 02         [ 7] 1383 	add	a, #0x02
+   0738 DD 77 FC      [19] 1384 	ld	-4 (ix),a
+   073B DD 7E F6      [19] 1385 	ld	a,-10 (ix)
+   073E CE 00         [ 7] 1386 	adc	a, #0x00
+   0740 DD 77 FD      [19] 1387 	ld	-3 (ix),a
+                           1388 ;dext.c:343: out->data=(void*)readExpression(idx);
+   0743 DD 7E F5      [19] 1389 	ld	a,-11 (ix)
+   0746 C6 04         [ 7] 1390 	add	a, #0x04
+   0748 DD 77 FA      [19] 1391 	ld	-6 (ix),a
+   074B DD 7E F6      [19] 1392 	ld	a,-10 (ix)
+   074E CE 00         [ 7] 1393 	adc	a, #0x00
+   0750 DD 77 FB      [19] 1394 	ld	-5 (ix),a
+                           1395 ;dext.c:334: if((a<='Z'&&a>='A')||(a<='z'&&a>='a')){
+   0753 3E 5A         [ 7] 1396 	ld	a,#0x5A
+   0755 DD 96 F7      [19] 1397 	sub	a, -9 (ix)
+   0758 E2r5Dr07      [10] 1398 	jp	PO, 00188$
+   075B EE 80         [ 7] 1399 	xor	a, #0x80
+   075D                    1400 00188$:
+   075D FAr69r07      [10] 1401 	jp	M,00125$
+   0760 DD 7E F7      [19] 1402 	ld	a,-9 (ix)
+   0763 EE 80         [ 7] 1403 	xor	a, #0x80
+   0765 D6 C1         [ 7] 1404 	sub	a, #0xC1
+   0767 30 17         [12] 1405 	jr	NC,00120$
+   0769                    1406 00125$:
+   0769 3E 7A         [ 7] 1407 	ld	a,#0x7A
+   076B DD 96 F7      [19] 1408 	sub	a, -9 (ix)
+   076E E2r73r07      [10] 1409 	jp	PO, 00189$
+   0771 EE 80         [ 7] 1410 	xor	a, #0x80
+   0773                    1411 00189$:
+   0773 FAr5Br08      [10] 1412 	jp	M,00121$
+   0776 DD 7E F7      [19] 1413 	ld	a,-9 (ix)
+   0779 EE 80         [ 7] 1414 	xor	a, #0x80
+   077B D6 E1         [ 7] 1415 	sub	a, #0xE1
+   077D DAr5Br08      [10] 1416 	jp	C,00121$
+   0780                    1417 00120$:
+                           1418 ;dext.c:335: name=readText(idx);
+   0780 DD 6E FE      [19] 1419 	ld	l,-2 (ix)
+   0783 DD 66 FF      [19] 1420 	ld	h,-1 (ix)
+   0786 E5            [11] 1421 	push	hl
+   0787 CDr90r05      [17] 1422 	call	_readText
+   078A F1            [10] 1423 	pop	af
+                           1424 ;dext.c:336: if(!strcmp(name,"NewFOLDER")){
+   078B 11r78r09      [10] 1425 	ld	de,#___str_14+0
+   078E E5            [11] 1426 	push	hl
+   078F D5            [11] 1427 	push	de
+   0790 E5            [11] 1428 	push	hl
+   0791 CDr07r00      [17] 1429 	call	_strcmp
+   0794 F1            [10] 1430 	pop	af
+   0795 F1            [10] 1431 	pop	af
+   0796 7D            [ 4] 1432 	ld	a,l
+   0797 E1            [10] 1433 	pop	hl
+   0798 B7            [ 4] 1434 	or	a, a
+   0799 20 4E         [12] 1435 	jr	NZ,00109$
+                           1436 ;dext.c:337: out->type=VAR_DIR;
+   079B DD 6E FC      [19] 1437 	ld	l,-4 (ix)
+   079E DD 66 FD      [19] 1438 	ld	h,-3 (ix)
+   07A1 36 04         [10] 1439 	ld	(hl),#0x04
+   07A3 23            [ 6] 1440 	inc	hl
+   07A4 36 00         [10] 1441 	ld	(hl),#0x00
+                           1442 ;dext.c:338: if(raw[idx[0]]!='@'){
+   07A6 DD 6E FE      [19] 1443 	ld	l,-2 (ix)
+   07A9 DD 66 FF      [19] 1444 	ld	h,-1 (ix)
+   07AC 4E            [ 7] 1445 	ld	c,(hl)
+   07AD 23            [ 6] 1446 	inc	hl
+   07AE 46            [ 7] 1447 	ld	b,(hl)
+   07AF 2Ar13r40      [16] 1448 	ld	hl,(_raw)
+   07B2 09            [11] 1449 	add	hl,bc
+   07B3 7E            [ 7] 1450 	ld	a,(hl)
+   07B4 D6 40         [ 7] 1451 	sub	a, #0x40
+   07B6 28 0E         [12] 1452 	jr	Z,00102$
+                           1453 ;dext.c:339: println("Bad NewFOLDER constructor;");
+   07B8 21r82r09      [10] 1454 	ld	hl,#___str_15
+   07BB E5            [11] 1455 	push	hl
+   07BC CDr24r00      [17] 1456 	call	_println
+   07BF F1            [10] 1457 	pop	af
+                           1458 ;dext.c:340: return &nil;
+   07C0 21r0Dr40      [10] 1459 	ld	hl,#_nil
+   07C3 C3r73r09      [10] 1460 	jp	00132$
+   07C6                    1461 00102$:
+                           1462 ;dext.c:342: idx[0]++;
+   07C6 03            [ 6] 1463 	inc	bc
+   07C7 51            [ 4] 1464 	ld	d,c
+   07C8 DD 6E FE      [19] 1465 	ld	l,-2 (ix)
+   07CB DD 66 FF      [19] 1466 	ld	h,-1 (ix)
+   07CE 72            [ 7] 1467 	ld	(hl),d
+   07CF 23            [ 6] 1468 	inc	hl
+   07D0 70            [ 7] 1469 	ld	(hl),b
+                           1470 ;dext.c:343: out->data=(void*)readExpression(idx);
+   07D1 DD 6E FE      [19] 1471 	ld	l,-2 (ix)
+   07D4 DD 66 FF      [19] 1472 	ld	h,-1 (ix)
+   07D7 E5            [11] 1473 	push	hl
+   07D8 CDrBEr09      [17] 1474 	call	_readExpression
+   07DB F1            [10] 1475 	pop	af
+   07DC 55            [ 4] 1476 	ld	d,l
+   07DD 5C            [ 4] 1477 	ld	e,h
+   07DE DD 6E FA      [19] 1478 	ld	l,-6 (ix)
+   07E1 DD 66 FB      [19] 1479 	ld	h,-5 (ix)
+   07E4 72            [ 7] 1480 	ld	(hl),d
+   07E5 23            [ 6] 1481 	inc	hl
+   07E6 73            [ 7] 1482 	ld	(hl),e
+   07E7 18 69         [12] 1483 	jr	00110$
+   07E9                    1484 00109$:
+                           1485 ;dext.c:344: }else if(!strcmp(name,"NewFILE")){
+   07E9 11r9Dr09      [10] 1486 	ld	de,#___str_16+0
+   07EC E5            [11] 1487 	push	hl
+   07ED D5            [11] 1488 	push	de
+   07EE E5            [11] 1489 	push	hl
+   07EF CDr07r00      [17] 1490 	call	_strcmp
+   07F2 F1            [10] 1491 	pop	af
+   07F3 F1            [10] 1492 	pop	af
+   07F4 7D            [ 4] 1493 	ld	a,l
+   07F5 E1            [10] 1494 	pop	hl
+   07F6 B7            [ 4] 1495 	or	a, a
+   07F7 20 4E         [12] 1496 	jr	NZ,00106$
+                           1497 ;dext.c:345: out->type=VAR_FILE;
+   07F9 DD 6E FC      [19] 1498 	ld	l,-4 (ix)
+   07FC DD 66 FD      [19] 1499 	ld	h,-3 (ix)
+   07FF 36 02         [10] 1500 	ld	(hl),#0x02
+   0801 23            [ 6] 1501 	inc	hl
+   0802 36 00         [10] 1502 	ld	(hl),#0x00
+                           1503 ;dext.c:346: if(raw[idx[0]]!='@'){
+   0804 DD 6E FE      [19] 1504 	ld	l,-2 (ix)
+   0807 DD 66 FF      [19] 1505 	ld	h,-1 (ix)
+   080A 4E            [ 7] 1506 	ld	c,(hl)
+   080B 23            [ 6] 1507 	inc	hl
+   080C 46            [ 7] 1508 	ld	b,(hl)
+   080D 2Ar13r40      [16] 1509 	ld	hl,(_raw)
+   0810 09            [11] 1510 	add	hl,bc
+   0811 7E            [ 7] 1511 	ld	a,(hl)
+   0812 D6 40         [ 7] 1512 	sub	a, #0x40
+   0814 28 0E         [12] 1513 	jr	Z,00104$
+                           1514 ;dext.c:347: println("Bad NewFILE constructor;");
+   0816 21rA5r09      [10] 1515 	ld	hl,#___str_17
+   0819 E5            [11] 1516 	push	hl
+   081A CDr24r00      [17] 1517 	call	_println
+   081D F1            [10] 1518 	pop	af
+                           1519 ;dext.c:348: return &nil;
+   081E 21r0Dr40      [10] 1520 	ld	hl,#_nil
+   0821 C3r73r09      [10] 1521 	jp	00132$
+   0824                    1522 00104$:
+                           1523 ;dext.c:350: idx[0]++;
+   0824 03            [ 6] 1524 	inc	bc
+   0825 51            [ 4] 1525 	ld	d,c
+   0826 DD 6E FE      [19] 1526 	ld	l,-2 (ix)
+   0829 DD 66 FF      [19] 1527 	ld	h,-1 (ix)
+   082C 72            [ 7] 1528 	ld	(hl),d
+   082D 23            [ 6] 1529 	inc	hl
+   082E 70            [ 7] 1530 	ld	(hl),b
+                           1531 ;dext.c:351: out->data=(void*)readExpression(idx);
+   082F DD 6E FE      [19] 1532 	ld	l,-2 (ix)
+   0832 DD 66 FF      [19] 1533 	ld	h,-1 (ix)
+   0835 E5            [11] 1534 	push	hl
+   0836 CDrBEr09      [17] 1535 	call	_readExpression
+   0839 F1            [10] 1536 	pop	af
+   083A 55            [ 4] 1537 	ld	d,l
+   083B 5C            [ 4] 1538 	ld	e,h
+   083C DD 6E FA      [19] 1539 	ld	l,-6 (ix)
+   083F DD 66 FB      [19] 1540 	ld	h,-5 (ix)
+   0842 72            [ 7] 1541 	ld	(hl),d
+   0843 23            [ 6] 1542 	inc	hl
+   0844 73            [ 7] 1543 	ld	(hl),e
+   0845 18 0B         [12] 1544 	jr	00110$
+   0847                    1545 00106$:
+                           1546 ;dext.c:353: out=getVar(name);
+   0847 E5            [11] 1547 	push	hl
+   0848 CDr3Cr05      [17] 1548 	call	_getVar
+   084B F1            [10] 1549 	pop	af
+   084C DD 75 F5      [19] 1550 	ld	-11 (ix),l
+   084F DD 74 F6      [19] 1551 	ld	-10 (ix),h
+   0852                    1552 00110$:
+                           1553 ;dext.c:354: return out;
+   0852 DD 6E F5      [19] 1554 	ld	l,-11 (ix)
+   0855 DD 66 F6      [19] 1555 	ld	h,-10 (ix)
+   0858 C3r73r09      [10] 1556 	jp	00132$
+   085B                    1557 00121$:
+                           1558 ;dext.c:355: }else if(a>='0'&&a<='9'){
+   085B DD 7E F7      [19] 1559 	ld	a,-9 (ix)
+   085E EE 80         [ 7] 1560 	xor	a, #0x80
+   0860 D6 B0         [ 7] 1561 	sub	a, #0xB0
+   0862 38 36         [12] 1562 	jr	C,00117$
+   0864 3E 39         [ 7] 1563 	ld	a,#0x39
+   0866 DD 96 F7      [19] 1564 	sub	a, -9 (ix)
+   0869 E2r6Er08      [10] 1565 	jp	PO, 00192$
+   086C EE 80         [ 7] 1566 	xor	a, #0x80
+   086E                    1567 00192$:
+   086E FAr9Ar08      [10] 1568 	jp	M,00117$
+                           1569 ;dext.c:356: i=readNumber(idx);
+   0871 DD 6E FE      [19] 1570 	ld	l,-2 (ix)
+   0874 DD 66 FF      [19] 1571 	ld	h,-1 (ix)
+   0877 E5            [11] 1572 	push	hl
+   0878 CDr4Cr06      [17] 1573 	call	_readNumber
+   087B F1            [10] 1574 	pop	af
+   087C 55            [ 4] 1575 	ld	d,l
+   087D 5C            [ 4] 1576 	ld	e,h
+                           1577 ;dext.c:357: out->type=VAR_INT;
+   087E DD 6E FC      [19] 1578 	ld	l,-4 (ix)
+   0881 DD 66 FD      [19] 1579 	ld	h,-3 (ix)
+   0884 AF            [ 4] 1580 	xor	a, a
+   0885 77            [ 7] 1581 	ld	(hl), a
+   0886 23            [ 6] 1582 	inc	hl
+   0887 77            [ 7] 1583 	ld	(hl), a
+                           1584 ;dext.c:358: out->data=(void*)i;
+   0888 DD 6E FA      [19] 1585 	ld	l,-6 (ix)
+   088B DD 66 FB      [19] 1586 	ld	h,-5 (ix)
+   088E 72            [ 7] 1587 	ld	(hl),d
+   088F 23            [ 6] 1588 	inc	hl
+   0890 73            [ 7] 1589 	ld	(hl),e
+                           1590 ;dext.c:359: return out;
+   0891 DD 6E F5      [19] 1591 	ld	l,-11 (ix)
+   0894 DD 66 F6      [19] 1592 	ld	h,-10 (ix)
+   0897 C3r73r09      [10] 1593 	jp	00132$
+   089A                    1594 00117$:
+                           1595 ;dext.c:360: }else if(a=='"'){
+   089A DD 7E F7      [19] 1596 	ld	a,-9 (ix)
+   089D D6 22         [ 7] 1597 	sub	a, #0x22
+   089F C2r70r09      [10] 1598 	jp	NZ,00114$
+                           1599 ;dext.c:361: idx[0]++;
+   08A2 DD 6E FE      [19] 1600 	ld	l,-2 (ix)
+   08A5 DD 66 FF      [19] 1601 	ld	h,-1 (ix)
+   08A8 4E            [ 7] 1602 	ld	c,(hl)
+   08A9 23            [ 6] 1603 	inc	hl
+   08AA 46            [ 7] 1604 	ld	b,(hl)
+   08AB 03            [ 6] 1605 	inc	bc
+   08AC 51            [ 4] 1606 	ld	d,c
+   08AD DD 6E FE      [19] 1607 	ld	l,-2 (ix)
+   08B0 DD 66 FF      [19] 1608 	ld	h,-1 (ix)
+   08B3 72            [ 7] 1609 	ld	(hl),d
+   08B4 23            [ 6] 1610 	inc	hl
+   08B5 70            [ 7] 1611 	ld	(hl),b
+                           1612 ;dext.c:362: i=0;
+   08B6 DD 77 F8      [19] 1613 	ld	-8 (ix),a
+   08B9 DD 77 F9      [19] 1614 	ld	-7 (ix),a
+   08BC DD 36 F3 00   [19] 1615 	ld	-13 (ix),#0x00
+   08C0 DD 36 F4 00   [19] 1616 	ld	-12 (ix),#0x00
+   08C4                    1617 00127$:
+                           1618 ;dext.c:363: for(;(raw[i]!='"');i++)
+   08C4 FD 2Ar13r40   [20] 1619 	ld	iy,(_raw)
+   08C8 DD 5E F3      [19] 1620 	ld	e,-13 (ix)
+   08CB DD 56 F4      [19] 1621 	ld	d,-12 (ix)
+   08CE FD 19         [15] 1622 	add	iy, de
+   08D0 FD 7E 00      [19] 1623 	ld	a, 0 (iy)
+   08D3 D6 22         [ 7] 1624 	sub	a, #0x22
+   08D5 28 12         [12] 1625 	jr	Z,00111$
+                           1626 ;dext.c:364: l++;
+   08D7 DD 34 F8      [23] 1627 	inc	-8 (ix)
+   08DA 20 03         [12] 1628 	jr	NZ,00196$
+   08DC DD 34 F9      [23] 1629 	inc	-7 (ix)
+   08DF                    1630 00196$:
+                           1631 ;dext.c:363: for(;(raw[i]!='"');i++)
+   08DF DD 34 F3      [23] 1632 	inc	-13 (ix)
+   08E2 20 E0         [12] 1633 	jr	NZ,00127$
+   08E4 DD 34 F4      [23] 1634 	inc	-12 (ix)
+   08E7 18 DB         [12] 1635 	jr	00127$
+   08E9                    1636 00111$:
+                           1637 ;dext.c:365: quepie=(char*)malloc(l);
+   08E9 DD 6E F8      [19] 1638 	ld	l,-8 (ix)
+   08EC DD 66 F9      [19] 1639 	ld	h,-7 (ix)
+   08EF E5            [11] 1640 	push	hl
+   08F0 CDr3Fr00      [17] 1641 	call	_malloc
+   08F3 F1            [10] 1642 	pop	af
+   08F4 4D            [ 4] 1643 	ld	c, l
+   08F5 44            [ 4] 1644 	ld	b, h
+                           1645 ;dext.c:366: for(i=0;(raw[idx[0]]!='"');idx[0]++){
+   08F6 11 00 00      [10] 1646 	ld	de,#0x0000
+   08F9                    1647 00130$:
+   08F9 DD 6E FE      [19] 1648 	ld	l,-2 (ix)
+   08FC DD 66 FF      [19] 1649 	ld	h,-1 (ix)
+   08FF 7E            [ 7] 1650 	ld	a,(hl)
+   0900 DD 77 F8      [19] 1651 	ld	-8 (ix),a
+   0903 23            [ 6] 1652 	inc	hl
+   0904 7E            [ 7] 1653 	ld	a,(hl)
+   0905 DD 77 F9      [19] 1654 	ld	-7 (ix),a
+   0908 E5            [11] 1655 	push	hl
+   0909 DD 6E F8      [19] 1656 	ld	l,-8 (ix)
+   090C DD 66 F9      [19] 1657 	ld	h,-7 (ix)
+   090F E5            [11] 1658 	push	hl
+   0910 FD E1         [14] 1659 	pop	iy
+   0912 E1            [10] 1660 	pop	hl
+   0913 C5            [11] 1661 	push	bc
+   0914 ED 4Br13r40   [20] 1662 	ld	bc,(_raw)
+   0918 FD 09         [15] 1663 	add	iy, bc
+   091A C1            [10] 1664 	pop	bc
+   091B FD 7E 00      [19] 1665 	ld	a, 0 (iy)
+   091E DD 77 F8      [19] 1666 	ld	-8 (ix),a
+                           1667 ;dext.c:367: quepie[i]=raw[idx[0]];
+   0921 6B            [ 4] 1668 	ld	l, e
+   0922 62            [ 4] 1669 	ld	h, d
+   0923 09            [11] 1670 	add	hl,bc
+                           1671 ;dext.c:366: for(i=0;(raw[idx[0]]!='"');idx[0]++){
+   0924 DD 7E F8      [19] 1672 	ld	a,-8 (ix)
+   0927 D6 22         [ 7] 1673 	sub	a, #0x22
+   0929 28 27         [12] 1674 	jr	Z,00112$
+                           1675 ;dext.c:367: quepie[i]=raw[idx[0]];
+   092B DD 7E F8      [19] 1676 	ld	a,-8 (ix)
+   092E 77            [ 7] 1677 	ld	(hl),a
+                           1678 ;dext.c:368: i++;
+   092F 13            [ 6] 1679 	inc	de
+                           1680 ;dext.c:366: for(i=0;(raw[idx[0]]!='"');idx[0]++){
+   0930 DD 6E FE      [19] 1681 	ld	l,-2 (ix)
+   0933 DD 66 FF      [19] 1682 	ld	h,-1 (ix)
+   0936 7E            [ 7] 1683 	ld	a, (hl)
+   0937 23            [ 6] 1684 	inc	hl
+   0938 66            [ 7] 1685 	ld	h,(hl)
+   0939 6F            [ 4] 1686 	ld	l,a
+   093A 23            [ 6] 1687 	inc	hl
+   093B DD 75 F8      [19] 1688 	ld	-8 (ix),l
+   093E DD 74 F9      [19] 1689 	ld	-7 (ix),h
+   0941 DD 6E FE      [19] 1690 	ld	l,-2 (ix)
+   0944 DD 66 FF      [19] 1691 	ld	h,-1 (ix)
+   0947 DD 7E F8      [19] 1692 	ld	a,-8 (ix)
+   094A 77            [ 7] 1693 	ld	(hl),a
+   094B 23            [ 6] 1694 	inc	hl
+   094C DD 7E F9      [19] 1695 	ld	a,-7 (ix)
+   094F 77            [ 7] 1696 	ld	(hl),a
+   0950 18 A7         [12] 1697 	jr	00130$
+   0952                    1698 00112$:
+                           1699 ;dext.c:370: quepie[i]=0;
+   0952 36 00         [10] 1700 	ld	(hl),#0x00
+                           1701 ;dext.c:371: out->type=VAR_STR;
+   0954 DD 6E FC      [19] 1702 	ld	l,-4 (ix)
+   0957 DD 66 FD      [19] 1703 	ld	h,-3 (ix)
+   095A 36 01         [10] 1704 	ld	(hl),#0x01
+   095C 23            [ 6] 1705 	inc	hl
+   095D 36 00         [10] 1706 	ld	(hl),#0x00
+                           1707 ;dext.c:372: out->data=(void*)quepie;
+   095F DD 6E FA      [19] 1708 	ld	l,-6 (ix)
+   0962 DD 66 FB      [19] 1709 	ld	h,-5 (ix)
+   0965 71            [ 7] 1710 	ld	(hl),c
+   0966 23            [ 6] 1711 	inc	hl
+   0967 70            [ 7] 1712 	ld	(hl),b
+                           1713 ;dext.c:373: return out;
+   0968 DD 6E F5      [19] 1714 	ld	l,-11 (ix)
+   096B DD 66 F6      [19] 1715 	ld	h,-10 (ix)
+   096E 18 03         [12] 1716 	jr	00132$
+   0970                    1717 00114$:
+                           1718 ;dext.c:375: return &nil;
+   0970 21r0Dr40      [10] 1719 	ld	hl,#_nil+0
+   0973                    1720 00132$:
+   0973 DD F9         [10] 1721 	ld	sp, ix
+   0975 DD E1         [14] 1722 	pop	ix
+   0977 C9            [10] 1723 	ret
+   0978                    1724 ___str_14:
+   0978 4E 65 77 46 4F 4C  1725 	.ascii "NewFOLDER"
+        44 45 52
+   0981 00                 1726 	.db 0x00
+   0982                    1727 ___str_15:
+   0982 42 61 64 20 4E 65  1728 	.ascii "Bad NewFOLDER constructor;"
+        77 46 4F 4C 44 45
+        52 20 63 6F 6E 73
+        74 72 75 63 74 6F
+        72 3B
+   099C 00                 1729 	.db 0x00
+   099D                    1730 ___str_16:
+   099D 4E 65 77 46 49 4C  1731 	.ascii "NewFILE"
+        45
+   09A4 00                 1732 	.db 0x00
+   09A5                    1733 ___str_17:
+   09A5 42 61 64 20 4E 65  1734 	.ascii "Bad NewFILE constructor;"
+        77 46 49 4C 45 20
+        63 6F 6E 73 74 72
+        75 63 74 6F 72 3B
+   09BD 00                 1735 	.db 0x00
+                           1736 ;dext.c:378: char* readExpression(int*idx){
+                           1737 ;	---------------------------------
+                           1738 ; Function readExpression
+                           1739 ; ---------------------------------
+   09BE                    1740 _readExpression::
+                           1741 ;dext.c:379: var* v=resolveExpression(idx);
+   09BE C1            [10] 1742 	pop	bc
+   09BF E1            [10] 1743 	pop	hl
+   09C0 E5            [11] 1744 	push	hl
+   09C1 C5            [11] 1745 	push	bc
+   09C2 E5            [11] 1746 	push	hl
+   09C3 CDr00r07      [17] 1747 	call	_resolveExpression
+                           1748 ;dext.c:380: return toString(v);
+   09C6 E3            [19] 1749 	ex	(sp),hl
+   09C7 CDr5Br03      [17] 1750 	call	_toString
+   09CA F1            [10] 1751 	pop	af
+   09CB C9            [10] 1752 	ret
+                           1753 ;dext.c:382: int parse(int idx){
+                           1754 ;	---------------------------------
+                           1755 ; Function parse
+                           1756 ; ---------------------------------
+   09CC                    1757 _parse::
+   09CC CDr00r00      [17] 1758 	call	___sdcc_enter_ix
+   09CF F5            [11] 1759 	push	af
+   09D0 F5            [11] 1760 	push	af
+   09D1 F5            [11] 1761 	push	af
+                           1762 ;dext.c:383: char c=raw[idx];
+   09D2 3Ar13r40      [13] 1763 	ld	a,(#_raw + 0)
+   09D5 DD 86 04      [19] 1764 	add	a, 4 (ix)
+   09D8 6F            [ 4] 1765 	ld	l,a
+   09D9 3Ar14r40      [13] 1766 	ld	a,(#_raw + 1)
+   09DC DD 8E 05      [19] 1767 	adc	a, 5 (ix)
+   09DF 67            [ 4] 1768 	ld	h,a
+   09E0 5E            [ 7] 1769 	ld	e,(hl)
+                           1770 ;dext.c:387: while(c==' '||c=='\r'||c=='\n'||c=='\t'){
+   09E1 DD 7E 04      [19] 1771 	ld	a,4 (ix)
+   09E4 DD 77 FE      [19] 1772 	ld	-2 (ix),a
+   09E7 DD 7E 05      [19] 1773 	ld	a,5 (ix)
+   09EA DD 77 FF      [19] 1774 	ld	-1 (ix),a
+   09ED                    1775 00104$:
+                           1776 ;dext.c:388: idx++;
+   09ED DD 4E FE      [19] 1777 	ld	c,-2 (ix)
+   09F0 DD 46 FF      [19] 1778 	ld	b,-1 (ix)
+   09F3 03            [ 6] 1779 	inc	bc
+                           1780 ;dext.c:389: c=raw[idx];
+   09F4 3Ar13r40      [13] 1781 	ld	a,(#_raw + 0)
+   09F7 81            [ 4] 1782 	add	a, c
+   09F8 DD 77 FC      [19] 1783 	ld	-4 (ix),a
+   09FB 3Ar14r40      [13] 1784 	ld	a,(#_raw + 1)
+   09FE 88            [ 4] 1785 	adc	a, b
+   09FF DD 77 FD      [19] 1786 	ld	-3 (ix),a
+                           1787 ;dext.c:387: while(c==' '||c=='\r'||c=='\n'||c=='\t'){
+   0A02 7B            [ 4] 1788 	ld	a,e
+   0A03 FE 20         [ 7] 1789 	cp	a,#0x20
+   0A05 28 0C         [12] 1790 	jr	Z,00105$
+   0A07 FE 0D         [ 7] 1791 	cp	a,#0x0D
+   0A09 28 08         [12] 1792 	jr	Z,00105$
+   0A0B FE 0A         [ 7] 1793 	cp	a,#0x0A
+   0A0D 28 04         [12] 1794 	jr	Z,00105$
+   0A0F D6 09         [ 7] 1795 	sub	a, #0x09
+   0A11 20 15         [12] 1796 	jr	NZ,00173$
+   0A13                    1797 00105$:
+                           1798 ;dext.c:388: idx++;
+   0A13 DD 71 FE      [19] 1799 	ld	-2 (ix),c
+   0A16 DD 70 FF      [19] 1800 	ld	-1 (ix),b
+   0A19 DD 71 04      [19] 1801 	ld	4 (ix),c
+   0A1C DD 70 05      [19] 1802 	ld	5 (ix),b
+                           1803 ;dext.c:389: c=raw[idx];
+   0A1F DD 6E FC      [19] 1804 	ld	l,-4 (ix)
+   0A22 DD 66 FD      [19] 1805 	ld	h,-3 (ix)
+   0A25 5E            [ 7] 1806 	ld	e,(hl)
+   0A26 18 C5         [12] 1807 	jr	00104$
+   0A28                    1808 00173$:
+   0A28 DD 7E FE      [19] 1809 	ld	a,-2 (ix)
+   0A2B DD 77 04      [19] 1810 	ld	4 (ix),a
+   0A2E DD 7E FF      [19] 1811 	ld	a,-1 (ix)
+   0A31 DD 77 05      [19] 1812 	ld	5 (ix),a
+                           1813 ;dext.c:391: if(c=='/'&&raw[idx+1]=='/'){
+   0A34 7B            [ 4] 1814 	ld	a,e
+   0A35 D6 2F         [ 7] 1815 	sub	a, #0x2F
+   0A37 20 2F         [12] 1816 	jr	NZ,00111$
+   0A39 DD 6E FC      [19] 1817 	ld	l,-4 (ix)
+   0A3C DD 66 FD      [19] 1818 	ld	h,-3 (ix)
+   0A3F 7E            [ 7] 1819 	ld	a,(hl)
+   0A40 D6 2F         [ 7] 1820 	sub	a, #0x2F
+   0A42 20 24         [12] 1821 	jr	NZ,00111$
+                           1822 ;dext.c:392: while(c!='\n'){
+   0A44 DD 4E FE      [19] 1823 	ld	c,-2 (ix)
+   0A47 DD 46 FF      [19] 1824 	ld	b,-1 (ix)
+   0A4A                    1825 00107$:
+   0A4A 7B            [ 4] 1826 	ld	a,e
+   0A4B D6 0A         [ 7] 1827 	sub	a, #0x0A
+   0A4D 28 0E         [12] 1828 	jr	Z,00174$
+                           1829 ;dext.c:393: idx++;
+   0A4F 03            [ 6] 1830 	inc	bc
+   0A50 DD 71 04      [19] 1831 	ld	4 (ix),c
+   0A53 DD 70 05      [19] 1832 	ld	5 (ix),b
+                           1833 ;dext.c:394: c=raw[idx];
+   0A56 2Ar13r40      [16] 1834 	ld	hl,(_raw)
+   0A59 09            [11] 1835 	add	hl,bc
+   0A5A 5E            [ 7] 1836 	ld	e,(hl)
+   0A5B 18 ED         [12] 1837 	jr	00107$
+   0A5D                    1838 00174$:
+   0A5D DD 71 04      [19] 1839 	ld	4 (ix),c
+   0A60 DD 70 05      [19] 1840 	ld	5 (ix),b
+                           1841 ;dext.c:396: return idx;
+   0A63 69            [ 4] 1842 	ld	l, c
+   0A64 60            [ 4] 1843 	ld	h, b
+   0A65 C3r66r0C      [10] 1844 	jp	00149$
+   0A68                    1845 00111$:
+                           1846 ;dext.c:399: t=readText(&idx);
+   0A68 21 0A 00      [10] 1847 	ld	hl,#0x000A
+   0A6B 39            [11] 1848 	add	hl,sp
+   0A6C E5            [11] 1849 	push	hl
+   0A6D CDr90r05      [17] 1850 	call	_readText
+   0A70 F1            [10] 1851 	pop	af
+   0A71 33            [ 6] 1852 	inc	sp
+   0A72 33            [ 6] 1853 	inc	sp
+   0A73 E5            [11] 1854 	push	hl
+                           1855 ;dext.c:400: if(!strcmp(t,"NVRI")){
+   0A74 21r6Br0C      [10] 1856 	ld	hl,#___str_18+0
+   0A77 4D            [ 4] 1857 	ld	c, l
+   0A78 44            [ 4] 1858 	ld	b, h
+   0A79 E1            [10] 1859 	pop	hl
+   0A7A E5            [11] 1860 	push	hl
+   0A7B C5            [11] 1861 	push	bc
+   0A7C E5            [11] 1862 	push	hl
+   0A7D CDr07r00      [17] 1863 	call	_strcmp
+   0A80 F1            [10] 1864 	pop	af
+   0A81 F1            [10] 1865 	pop	af
+   0A82 7D            [ 4] 1866 	ld	a,l
+   0A83 B7            [ 4] 1867 	or	a, a
+   0A84 C2r21r0B      [10] 1868 	jp	NZ,00147$
+                           1869 ;dext.c:401: if(raw[idx]==':'){
+   0A87 FD 2Ar13r40   [20] 1870 	ld	iy,(_raw)
+   0A8B DD 5E 04      [19] 1871 	ld	e,4 (ix)
+   0A8E DD 56 05      [19] 1872 	ld	d,5 (ix)
+   0A91 FD 19         [15] 1873 	add	iy, de
+   0A93 FD 7E 00      [19] 1874 	ld	a, 0 (iy)
+   0A96 D6 3A         [ 7] 1875 	sub	a, #0x3A
+   0A98 C2r16r0B      [10] 1876 	jp	NZ,00116$
+                           1877 ;dext.c:402: idx++;
+   0A9B DD 34 04      [23] 1878 	inc	4 (ix)
+   0A9E 20 03         [12] 1879 	jr	NZ,00256$
+   0AA0 DD 34 05      [23] 1880 	inc	5 (ix)
+   0AA3                    1881 00256$:
+                           1882 ;dext.c:403: tmp=(var*)malloc(sizeof(var));
+   0AA3 21 06 00      [10] 1883 	ld	hl,#0x0006
+   0AA6 E5            [11] 1884 	push	hl
+   0AA7 CDr3Fr00      [17] 1885 	call	_malloc
+   0AAA F1            [10] 1886 	pop	af
+   0AAB 4D            [ 4] 1887 	ld	c, l
+   0AAC 44            [ 4] 1888 	ld	b, h
+                           1889 ;dext.c:404: tmp->name=readText(&idx);
+   0AAD 21 0A 00      [10] 1890 	ld	hl,#0x000A
+   0AB0 39            [11] 1891 	add	hl,sp
+   0AB1 C5            [11] 1892 	push	bc
+   0AB2 E5            [11] 1893 	push	hl
+   0AB3 CDr90r05      [17] 1894 	call	_readText
+   0AB6 F1            [10] 1895 	pop	af
+   0AB7 55            [ 4] 1896 	ld	d,l
+   0AB8 5C            [ 4] 1897 	ld	e,h
+   0AB9 C1            [10] 1898 	pop	bc
+   0ABA 69            [ 4] 1899 	ld	l, c
+   0ABB 60            [ 4] 1900 	ld	h, b
+   0ABC 72            [ 7] 1901 	ld	(hl),d
+   0ABD 23            [ 6] 1902 	inc	hl
+   0ABE 73            [ 7] 1903 	ld	(hl),e
+                           1904 ;dext.c:405: if(raw[idx]=='='){
+   0ABF FD 2Ar13r40   [20] 1905 	ld	iy,(_raw)
+   0AC3 DD 5E 04      [19] 1906 	ld	e,4 (ix)
+   0AC6 DD 56 05      [19] 1907 	ld	d,5 (ix)
+   0AC9 FD 19         [15] 1908 	add	iy, de
+   0ACB FD 7E 00      [19] 1909 	ld	a, 0 (iy)
+   0ACE D6 3D         [ 7] 1910 	sub	a, #0x3D
+   0AD0 20 3C         [12] 1911 	jr	NZ,00114$
+                           1912 ;dext.c:406: idx++;
+   0AD2 DD 34 04      [23] 1913 	inc	4 (ix)
+   0AD5 20 03         [12] 1914 	jr	NZ,00259$
+   0AD7 DD 34 05      [23] 1915 	inc	5 (ix)
+   0ADA                    1916 00259$:
+                           1917 ;dext.c:407: x=resolveExpression(&idx);
+   0ADA 21 0A 00      [10] 1918 	ld	hl,#0x000A
+   0ADD 39            [11] 1919 	add	hl,sp
+   0ADE C5            [11] 1920 	push	bc
+   0ADF E5            [11] 1921 	push	hl
+   0AE0 CDr00r07      [17] 1922 	call	_resolveExpression
+   0AE3 F1            [10] 1923 	pop	af
+   0AE4 C1            [10] 1924 	pop	bc
+   0AE5 EB            [ 4] 1925 	ex	de,hl
+                           1926 ;dext.c:408: tmp->type=x->type;
+   0AE6 C5            [11] 1927 	push	bc
+   0AE7 FD E1         [14] 1928 	pop	iy
+   0AE9 FD 23         [10] 1929 	inc	iy
+   0AEB FD 23         [10] 1930 	inc	iy
+   0AED 6B            [ 4] 1931 	ld	l, e
+   0AEE 62            [ 4] 1932 	ld	h, d
+   0AEF 23            [ 6] 1933 	inc	hl
+   0AF0 23            [ 6] 1934 	inc	hl
+   0AF1 7E            [ 7] 1935 	ld	a, (hl)
+   0AF2 23            [ 6] 1936 	inc	hl
+   0AF3 66            [ 7] 1937 	ld	h,(hl)
+   0AF4 FD 77 00      [19] 1938 	ld	0 (iy), a
+   0AF7 FD 74 01      [19] 1939 	ld	1 (iy),h
+                           1940 ;dext.c:409: tmp->data=x->data;
+   0AFA FD 21 04 00   [14] 1941 	ld	iy,#0x0004
+   0AFE FD 09         [15] 1942 	add	iy, bc
+   0B00 EB            [ 4] 1943 	ex	de,hl
+   0B01 11 04 00      [10] 1944 	ld	de, #0x0004
+   0B04 19            [11] 1945 	add	hl, de
+   0B05 56            [ 7] 1946 	ld	d,(hl)
+   0B06 23            [ 6] 1947 	inc	hl
+   0B07 66            [ 7] 1948 	ld	h,(hl)
+   0B08 FD 72 00      [19] 1949 	ld	0 (iy),d
+   0B0B FD 74 01      [19] 1950 	ld	1 (iy),h
+   0B0E                    1951 00114$:
+                           1952 ;dext.c:411: addVariable(tmp);
+   0B0E C5            [11] 1953 	push	bc
+   0B0F CDrBFr04      [17] 1954 	call	_addVariable
+   0B12 F1            [10] 1955 	pop	af
+   0B13 C3r59r0C      [10] 1956 	jp	00148$
+   0B16                    1957 00116$:
+                           1958 ;dext.c:413: println("invalid syntax!");
+   0B16 21r70r0C      [10] 1959 	ld	hl,#___str_19
+   0B19 E5            [11] 1960 	push	hl
+   0B1A CDr24r00      [17] 1961 	call	_println
+   0B1D F1            [10] 1962 	pop	af
+   0B1E C3r59r0C      [10] 1963 	jp	00148$
+   0B21                    1964 00147$:
+                           1965 ;dext.c:414: }else if(!strcmp(t,"ECHO")){
+   0B21 21r80r0C      [10] 1966 	ld	hl,#___str_20
+   0B24 4D            [ 4] 1967 	ld	c, l
+   0B25 44            [ 4] 1968 	ld	b, h
+   0B26 E1            [10] 1969 	pop	hl
+   0B27 E5            [11] 1970 	push	hl
+   0B28 C5            [11] 1971 	push	bc
+   0B29 E5            [11] 1972 	push	hl
+   0B2A CDr07r00      [17] 1973 	call	_strcmp
+   0B2D F1            [10] 1974 	pop	af
+   0B2E F1            [10] 1975 	pop	af
+   0B2F 7D            [ 4] 1976 	ld	a,l
+   0B30 B7            [ 4] 1977 	or	a, a
+   0B31 20 2C         [12] 1978 	jr	NZ,00144$
+                           1979 ;dext.c:415: if(raw[idx]==':'){
+   0B33 FD 2Ar13r40   [20] 1980 	ld	iy,(_raw)
+   0B37 DD 5E 04      [19] 1981 	ld	e,4 (ix)
+   0B3A DD 56 05      [19] 1982 	ld	d,5 (ix)
+   0B3D FD 19         [15] 1983 	add	iy, de
+   0B3F FD 7E 00      [19] 1984 	ld	a, 0 (iy)
+   0B42 D6 3A         [ 7] 1985 	sub	a, #0x3A
+   0B44 C2r59r0C      [10] 1986 	jp	NZ,00148$
+                           1987 ;dext.c:416: idx++;
+   0B47 DD 34 04      [23] 1988 	inc	4 (ix)
+   0B4A 20 03         [12] 1989 	jr	NZ,00262$
+   0B4C DD 34 05      [23] 1990 	inc	5 (ix)
+   0B4F                    1991 00262$:
+                           1992 ;dext.c:417: println(readExpression(&idx));
+   0B4F 21 0A 00      [10] 1993 	ld	hl,#0x000A
+   0B52 39            [11] 1994 	add	hl,sp
+   0B53 E5            [11] 1995 	push	hl
+   0B54 CDrBEr09      [17] 1996 	call	_readExpression
+   0B57 E3            [19] 1997 	ex	(sp),hl
+   0B58 CDr24r00      [17] 1998 	call	_println
+   0B5B F1            [10] 1999 	pop	af
+   0B5C C3r59r0C      [10] 2000 	jp	00148$
+   0B5F                    2001 00144$:
+                           2002 ;dext.c:420: x=getVar(t);
+   0B5F E1            [10] 2003 	pop	hl
+   0B60 E5            [11] 2004 	push	hl
+   0B61 E5            [11] 2005 	push	hl
+   0B62 CDr3Cr05      [17] 2006 	call	_getVar
+   0B65 F1            [10] 2007 	pop	af
+   0B66 4D            [ 4] 2008 	ld	c, l
+   0B67 44            [ 4] 2009 	ld	b, h
+                           2010 ;dext.c:421: if(raw[idx]==':'){
+   0B68 FD 2Ar13r40   [20] 2011 	ld	iy,(_raw)
+   0B6C DD 5E 04      [19] 2012 	ld	e,4 (ix)
+   0B6F DD 56 05      [19] 2013 	ld	d,5 (ix)
+   0B72 FD 19         [15] 2014 	add	iy, de
+   0B74 FD 7E 00      [19] 2015 	ld	a, 0 (iy)
+   0B77 D6 3A         [ 7] 2016 	sub	a, #0x3A
+   0B79 C2r59r0C      [10] 2017 	jp	NZ,00148$
+                           2018 ;dext.c:422: idx++;
+   0B7C DD 34 04      [23] 2019 	inc	4 (ix)
+   0B7F 20 03         [12] 2020 	jr	NZ,00265$
+   0B81 DD 34 05      [23] 2021 	inc	5 (ix)
+   0B84                    2022 00265$:
+                           2023 ;dext.c:423: free(t);
+   0B84 C5            [11] 2024 	push	bc
+   0B85 D1            [10] 2025 	pop	de
+   0B86 E1            [10] 2026 	pop	hl
+   0B87 E5            [11] 2027 	push	hl
+   0B88 D5            [11] 2028 	push	de
+   0B89 E5            [11] 2029 	push	hl
+   0B8A CDr60r00      [17] 2030 	call	_free
+   0B8D F1            [10] 2031 	pop	af
+   0B8E C1            [10] 2032 	pop	bc
+                           2033 ;dext.c:424: t=readText(&idx);
+   0B8F 21 0A 00      [10] 2034 	ld	hl,#0x000A
+   0B92 39            [11] 2035 	add	hl,sp
+   0B93 C5            [11] 2036 	push	bc
+   0B94 E5            [11] 2037 	push	hl
+   0B95 CDr90r05      [17] 2038 	call	_readText
+   0B98 F1            [10] 2039 	pop	af
+   0B99 C1            [10] 2040 	pop	bc
+   0B9A 33            [ 6] 2041 	inc	sp
+   0B9B 33            [ 6] 2042 	inc	sp
+   0B9C E5            [11] 2043 	push	hl
+                           2044 ;dext.c:425: switch(x->type){
+   0B9D 69            [ 4] 2045 	ld	l, c
+   0B9E 60            [ 4] 2046 	ld	h, b
+   0B9F 23            [ 6] 2047 	inc	hl
+   0BA0 23            [ 6] 2048 	inc	hl
+   0BA1 56            [ 7] 2049 	ld	d,(hl)
+   0BA2 23            [ 6] 2050 	inc	hl
+   0BA3 66            [ 7] 2051 	ld	h,(hl)
+   0BA4 7A            [ 4] 2052 	ld	a,d
+   0BA5 B4            [ 4] 2053 	or	a, h
+   0BA6 28 1E         [12] 2054 	jr	Z,00120$
+   0BA8 7A            [ 4] 2055 	ld	a,d
+   0BA9 3D            [ 4] 2056 	dec	a
+   0BAA 20 05         [12] 2057 	jr	NZ,00267$
+   0BAC 7C            [ 4] 2058 	ld	a,h
+   0BAD B7            [ 4] 2059 	or	a, a
+   0BAE CAr59r0C      [10] 2060 	jp	Z,00148$
+   0BB1                    2061 00267$:
+   0BB1 7A            [ 4] 2062 	ld	a,d
+   0BB2 D6 02         [ 7] 2063 	sub	a,#0x02
+   0BB4 20 03         [12] 2064 	jr	NZ,00268$
+   0BB6 B4            [ 4] 2065 	or	a,h
+   0BB7 28 54         [12] 2066 	jr	Z,00127$
+   0BB9                    2067 00268$:
+   0BB9 7A            [ 4] 2068 	ld	a,d
+   0BBA D6 04         [ 7] 2069 	sub	a,#0x04
+   0BBC C2r59r0C      [10] 2070 	jp	NZ,00148$
+   0BBF B4            [ 4] 2071 	or	a,h
+   0BC0 CAr4Br0C      [10] 2072 	jp	Z,00136$
+   0BC3 C3r59r0C      [10] 2073 	jp	00148$
+                           2074 ;dext.c:426: case VAR_INT:
+   0BC6                    2075 00120$:
+                           2076 ;dext.c:427: if(!strcmp(t,"INC")){
+   0BC6 21r85r0C      [10] 2077 	ld	hl,#___str_21
+   0BC9 C5            [11] 2078 	push	bc
+   0BCA E5            [11] 2079 	push	hl
+   0BCB DD 6E FA      [19] 2080 	ld	l,-6 (ix)
+   0BCE DD 66 FB      [19] 2081 	ld	h,-5 (ix)
+   0BD1 E5            [11] 2082 	push	hl
+   0BD2 CDr07r00      [17] 2083 	call	_strcmp
+   0BD5 F1            [10] 2084 	pop	af
+   0BD6 F1            [10] 2085 	pop	af
+   0BD7 55            [ 4] 2086 	ld	d,l
+   0BD8 C1            [10] 2087 	pop	bc
+                           2088 ;dext.c:409: tmp->data=x->data;
+   0BD9 21 04 00      [10] 2089 	ld	hl,#0x0004
+   0BDC 09            [11] 2090 	add	hl,bc
+                           2091 ;dext.c:427: if(!strcmp(t,"INC")){
+   0BDD 7A            [ 4] 2092 	ld	a,d
+   0BDE B7            [ 4] 2093 	or	a, a
+   0BDF 20 0B         [12] 2094 	jr	NZ,00124$
+                           2095 ;dext.c:428: x->data=(void*)((int)x->data+1);
+   0BE1 E5            [11] 2096 	push	hl
+   0BE2 5E            [ 7] 2097 	ld	e,(hl)
+   0BE3 23            [ 6] 2098 	inc	hl
+   0BE4 56            [ 7] 2099 	ld	d,(hl)
+   0BE5 E1            [10] 2100 	pop	hl
+   0BE6 13            [ 6] 2101 	inc	de
+   0BE7 73            [ 7] 2102 	ld	(hl),e
+   0BE8 23            [ 6] 2103 	inc	hl
+   0BE9 72            [ 7] 2104 	ld	(hl),d
+   0BEA 18 6D         [12] 2105 	jr	00148$
+   0BEC                    2106 00124$:
+                           2107 ;dext.c:429: }else if(!strcmp(t,"DEC")){
+   0BEC 11r89r0C      [10] 2108 	ld	de,#___str_22+0
+   0BEF E5            [11] 2109 	push	hl
+   0BF0 D5            [11] 2110 	push	de
+   0BF1 DD 4E FA      [19] 2111 	ld	c,-6 (ix)
+   0BF4 DD 46 FB      [19] 2112 	ld	b,-5 (ix)
+   0BF7 C5            [11] 2113 	push	bc
+   0BF8 CDr07r00      [17] 2114 	call	_strcmp
+   0BFB F1            [10] 2115 	pop	af
+   0BFC F1            [10] 2116 	pop	af
+   0BFD 7D            [ 4] 2117 	ld	a,l
+   0BFE E1            [10] 2118 	pop	hl
+   0BFF B7            [ 4] 2119 	or	a, a
+   0C00 20 57         [12] 2120 	jr	NZ,00148$
+                           2121 ;dext.c:430: x->data=(void*)((int)x->data-1);
+   0C02 E5            [11] 2122 	push	hl
+   0C03 5E            [ 7] 2123 	ld	e,(hl)
+   0C04 23            [ 6] 2124 	inc	hl
+   0C05 56            [ 7] 2125 	ld	d,(hl)
+   0C06 E1            [10] 2126 	pop	hl
+   0C07 1B            [ 6] 2127 	dec	de
+   0C08 73            [ 7] 2128 	ld	(hl),e
+   0C09 23            [ 6] 2129 	inc	hl
+   0C0A 72            [ 7] 2130 	ld	(hl),d
+                           2131 ;dext.c:432: break;
+   0C0B 18 4C         [12] 2132 	jr	00148$
+                           2133 ;dext.c:435: case VAR_FILE:
+   0C0D                    2134 00127$:
+                           2135 ;dext.c:436: if(!strcmp(t,"READ")){
+   0C0D 21r8Dr0C      [10] 2136 	ld	hl,#___str_23
+   0C10 4D            [ 4] 2137 	ld	c, l
+   0C11 44            [ 4] 2138 	ld	b, h
+   0C12 E1            [10] 2139 	pop	hl
+   0C13 E5            [11] 2140 	push	hl
+   0C14 C5            [11] 2141 	push	bc
+   0C15 E5            [11] 2142 	push	hl
+   0C16 CDr07r00      [17] 2143 	call	_strcmp
+   0C19 F1            [10] 2144 	pop	af
+   0C1A F1            [10] 2145 	pop	af
+   0C1B 7D            [ 4] 2146 	ld	a,l
+   0C1C B7            [ 4] 2147 	or	a, a
+   0C1D 28 2C         [12] 2148 	jr	Z,00136$
+                           2149 ;dext.c:438: }else if(!strcmp(t,"WRITE")){
+   0C1F 21r92r0C      [10] 2150 	ld	hl,#___str_24
+   0C22 4D            [ 4] 2151 	ld	c, l
+   0C23 44            [ 4] 2152 	ld	b, h
+   0C24 E1            [10] 2153 	pop	hl
+   0C25 E5            [11] 2154 	push	hl
+   0C26 C5            [11] 2155 	push	bc
+   0C27 E5            [11] 2156 	push	hl
+   0C28 CDr07r00      [17] 2157 	call	_strcmp
+   0C2B F1            [10] 2158 	pop	af
+   0C2C F1            [10] 2159 	pop	af
+   0C2D 7D            [ 4] 2160 	ld	a,l
+   0C2E B7            [ 4] 2161 	or	a, a
+   0C2F 28 1A         [12] 2162 	jr	Z,00136$
+                           2163 ;dext.c:440: }else if(!strcmp(t,"DELETE")){
+   0C31 21r98r0C      [10] 2164 	ld	hl,#___str_25
+   0C34 4D            [ 4] 2165 	ld	c, l
+   0C35 44            [ 4] 2166 	ld	b, h
+   0C36 E1            [10] 2167 	pop	hl
+   0C37 E5            [11] 2168 	push	hl
+   0C38 C5            [11] 2169 	push	bc
+   0C39 E5            [11] 2170 	push	hl
+   0C3A CDr07r00      [17] 2171 	call	_strcmp
+   0C3D F1            [10] 2172 	pop	af
+   0C3E F1            [10] 2173 	pop	af
+   0C3F 7D            [ 4] 2174 	ld	a,l
+   0C40 B7            [ 4] 2175 	or	a, a
+   0C41 20 08         [12] 2176 	jr	NZ,00136$
+                           2177 ;dext.c:441: println("ERROR: 'delete' not yet supported.");
+   0C43 21r9Fr0C      [10] 2178 	ld	hl,#___str_26
+   0C46 E5            [11] 2179 	push	hl
+   0C47 CDr24r00      [17] 2180 	call	_println
+   0C4A F1            [10] 2181 	pop	af
+                           2182 ;dext.c:443: case VAR_DIR:
+   0C4B                    2183 00136$:
+                           2184 ;dext.c:444: if(!strcmp(t,"CREATE")){
+   0C4B 21rC2r0C      [10] 2185 	ld	hl,#___str_27
+   0C4E 4D            [ 4] 2186 	ld	c, l
+   0C4F 44            [ 4] 2187 	ld	b, h
+   0C50 E1            [10] 2188 	pop	hl
+   0C51 E5            [11] 2189 	push	hl
+   0C52 C5            [11] 2190 	push	bc
+   0C53 E5            [11] 2191 	push	hl
+   0C54 CDr07r00      [17] 2192 	call	_strcmp
+   0C57 F1            [10] 2193 	pop	af
+   0C58 F1            [10] 2194 	pop	af
+                           2195 ;dext.c:449: }
+   0C59                    2196 00148$:
+                           2197 ;dext.c:452: free(t);
+   0C59 E1            [10] 2198 	pop	hl
+   0C5A E5            [11] 2199 	push	hl
+   0C5B E5            [11] 2200 	push	hl
+   0C5C CDr60r00      [17] 2201 	call	_free
+   0C5F F1            [10] 2202 	pop	af
+                           2203 ;dext.c:453: return idx;
+   0C60 DD 6E 04      [19] 2204 	ld	l,4 (ix)
+   0C63 DD 66 05      [19] 2205 	ld	h,5 (ix)
+   0C66                    2206 00149$:
+   0C66 DD F9         [10] 2207 	ld	sp, ix
+   0C68 DD E1         [14] 2208 	pop	ix
+   0C6A C9            [10] 2209 	ret
+   0C6B                    2210 ___str_18:
+   0C6B 4E 56 52 49        2211 	.ascii "NVRI"
+   0C6F 00                 2212 	.db 0x00
+   0C70                    2213 ___str_19:
+   0C70 69 6E 76 61 6C 69  2214 	.ascii "invalid syntax!"
+        64 20 73 79 6E 74
+        61 78 21
+   0C7F 00                 2215 	.db 0x00
+   0C80                    2216 ___str_20:
+   0C80 45 43 48 4F        2217 	.ascii "ECHO"
+   0C84 00                 2218 	.db 0x00
+   0C85                    2219 ___str_21:
+   0C85 49 4E 43           2220 	.ascii "INC"
+   0C88 00                 2221 	.db 0x00
+   0C89                    2222 ___str_22:
+   0C89 44 45 43           2223 	.ascii "DEC"
+   0C8C 00                 2224 	.db 0x00
+   0C8D                    2225 ___str_23:
+   0C8D 52 45 41 44        2226 	.ascii "READ"
+   0C91 00                 2227 	.db 0x00
+   0C92                    2228 ___str_24:
+   0C92 57 52 49 54 45     2229 	.ascii "WRITE"
+   0C97 00                 2230 	.db 0x00
+   0C98                    2231 ___str_25:
+   0C98 44 45 4C 45 54 45  2232 	.ascii "DELETE"
+   0C9E 00                 2233 	.db 0x00
+   0C9F                    2234 ___str_26:
+   0C9F 45 52 52 4F 52 3A  2235 	.ascii "ERROR: 'delete' not yet supported."
+        20 27 64 65 6C 65
+        74 65 27 20 6E 6F
+        74 20 79 65 74 20
+        73 75 70 70 6F 72
+        74 65 64 2E
+   0CC1 00                 2236 	.db 0x00
+   0CC2                    2237 ___str_27:
+   0CC2 43 52 45 41 54 45  2238 	.ascii "CREATE"
+   0CC8 00                 2239 	.db 0x00
+                           2240 ;dext.c:455: int dext(int argc, char** argv){
+                           2241 ;	---------------------------------
+                           2242 ; Function dext
+                           2243 ; ---------------------------------
+   0CC9                    2244 _dext::
+   0CC9 CDr00r00      [17] 2245 	call	___sdcc_enter_ix
+                           2246 ;dext.c:456: int idx=0;
+   0CCC 01 00 00      [10] 2247 	ld	bc,#0x0000
+                           2248 ;dext.c:457: num_vars=0;
+   0CCF 21 00 00      [10] 2249 	ld	hl,#0x0000
+   0CD2 22r09r40      [16] 2250 	ld	(_num_vars),hl
+                           2251 ;dext.c:462: raw="ECHO:\"Hello World!!!!!\"";//readFile(argv[1]);
+   0CD5 21r38r0D      [10] 2252 	ld	hl,#___str_28+0
+   0CD8 22r13r40      [16] 2253 	ld	(_raw),hl
+                           2254 ;dext.c:463: if(raw==(char*)NULL){
+   0CDB 3Ar13r40      [13] 2255 	ld	a,(#_raw + 0)
+   0CDE D6 6C         [ 7] 2256 	sub	a, #0x6C
+   0CE0 20 14         [12] 2257 	jr	NZ,00102$
+   0CE2 3Ar14r40      [13] 2258 	ld	a,(#_raw + 1)
+   0CE5 D6 FE         [ 7] 2259 	sub	a, #0xFE
+   0CE7 20 0D         [12] 2260 	jr	NZ,00102$
+                           2261 ;dext.c:464: println("Error: file not found!");
+   0CE9 21r50r0D      [10] 2262 	ld	hl,#___str_29
+   0CEC E5            [11] 2263 	push	hl
+   0CED CDr24r00      [17] 2264 	call	_println
+   0CF0 F1            [10] 2265 	pop	af
+                           2266 ;dext.c:465: return -2;
+   0CF1 21 FE FF      [10] 2267 	ld	hl,#0xFFFE
+   0CF4 18 3F         [12] 2268 	jr	00106$
+   0CF6                    2269 00102$:
+                           2270 ;dext.c:468: nil.name="null";
+   0CF6 21r67r0D      [10] 2271 	ld	hl,#___str_30
+   0CF9 22r0Dr40      [16] 2272 	ld	(_nil), hl
+                           2273 ;dext.c:469: nil.type=VAR_NULL;
+   0CFC 21 FF FF      [10] 2274 	ld	hl,#0xFFFF
+   0CFF 22r0Fr40      [16] 2275 	ld	((_nil + 0x0002)), hl
+                           2276 ;dext.c:470: nil.data=(void*)"null";
+   0D02 21r67r0D      [10] 2277 	ld	hl,#___str_30
+   0D05 22r11r40      [16] 2278 	ld	((_nil + 0x0004)), hl
+                           2279 ;dext.c:471: addVariable(&nil);
+   0D08 21r0Dr40      [10] 2280 	ld	hl,#_nil
+   0D0B C5            [11] 2281 	push	bc
+   0D0C E5            [11] 2282 	push	hl
+   0D0D CDrBFr04      [17] 2283 	call	_addVariable
+   0D10 F1            [10] 2284 	pop	af
+   0D11 C1            [10] 2285 	pop	bc
+                           2286 ;dext.c:473: while(idx<strlen(raw)){
+   0D12                    2287 00103$:
+   0D12 C5            [11] 2288 	push	bc
+   0D13 2Ar13r40      [16] 2289 	ld	hl,(_raw)
+   0D16 E5            [11] 2290 	push	hl
+   0D17 CDr12r00      [17] 2291 	call	_strlen
+   0D1A F1            [10] 2292 	pop	af
+   0D1B C1            [10] 2293 	pop	bc
+   0D1C 79            [ 4] 2294 	ld	a,c
+   0D1D 95            [ 4] 2295 	sub	a, l
+   0D1E 78            [ 4] 2296 	ld	a,b
+   0D1F 9C            [ 4] 2297 	sbc	a, h
+   0D20 E2r25r0D      [10] 2298 	jp	PO, 00122$
+   0D23 EE 80         [ 7] 2299 	xor	a, #0x80
+   0D25                    2300 00122$:
+   0D25 F2r32r0D      [10] 2301 	jp	P,00105$
+                           2302 ;dext.c:474: idx=parse(idx);
+   0D28 C5            [11] 2303 	push	bc
+   0D29 CDrCCr09      [17] 2304 	call	_parse
+   0D2C F1            [10] 2305 	pop	af
+                           2306 ;dext.c:475: idx++;
+   0D2D 23            [ 6] 2307 	inc	hl
+   0D2E 4D            [ 4] 2308 	ld	c,l
+   0D2F 44            [ 4] 2309 	ld	b,h
+   0D30 18 E0         [12] 2310 	jr	00103$
+   0D32                    2311 00105$:
+                           2312 ;dext.c:477: return 0;
+   0D32 21 00 00      [10] 2313 	ld	hl,#0x0000
+   0D35                    2314 00106$:
+   0D35 DD E1         [14] 2315 	pop	ix
+   0D37 C9            [10] 2316 	ret
+   0D38                    2317 ___str_28:
+   0D38 45 43 48 4F 3A     2318 	.ascii "ECHO:"
+   0D3D 22                 2319 	.db 0x22
+   0D3E 48 65 6C 6C 6F 20  2320 	.ascii "Hello World!!!!!"
+        57 6F 72 6C 64 21
+        21 21 21 21
+   0D4E 22                 2321 	.db 0x22
+   0D4F 00                 2322 	.db 0x00
+   0D50                    2323 ___str_29:
+   0D50 45 72 72 6F 72 3A  2324 	.ascii "Error: file not found!"
+        20 66 69 6C 65 20
+        6E 6F 74 20 66 6F
+        75 6E 64 21
+   0D66 00                 2325 	.db 0x00
+   0D67                    2326 ___str_30:
+   0D67 6E 75 6C 6C        2327 	.ascii "null"
+   0D6B 00                 2328 	.db 0x00
+                           2329 ;main.c:5: void osstart(){
+                           2330 ;	---------------------------------
+                           2331 ; Function osstart
+                           2332 ; ---------------------------------
+   0D6C                    2333 _osstart::
+                           2334 ;main.c:6: initOS();
+   0D6C CDr00r00      [17] 2335 	call	_initOS
+                           2336 ;main.c:7: println("NTIOS 1.0\r(built with SDCC)");
+   0D6F 21r8Fr0D      [10] 2337 	ld	hl,#___str_31
+   0D72 E5            [11] 2338 	push	hl
+   0D73 CDr24r00      [17] 2339 	call	_println
+   0D76 F1            [10] 2340 	pop	af
+                           2341 ;main.c:8: while(true){
+   0D77                    2342 00102$:
+                           2343 ;main.c:9: print("> ");
+   0D77 21rABr0D      [10] 2344 	ld	hl,#___str_32
+   0D7A E5            [11] 2345 	push	hl
+   0D7B CDr1Cr00      [17] 2346 	call	_print
+                           2347 ;main.c:10: input(kbdbuff);
+   0D7E 21r15r40      [10] 2348 	ld	hl, #_kbdbuff
+   0D81 E3            [19] 2349 	ex	(sp),hl
+   0D82 CDr31r00      [17] 2350 	call	_input
+                           2351 ;main.c:11: system(kbdbuff);
+   0D85 21r15r40      [10] 2352 	ld	hl, #_kbdbuff
+   0D88 E3            [19] 2353 	ex	(sp),hl
+   0D89 CDr2Er02      [17] 2354 	call	_system
+   0D8C F1            [10] 2355 	pop	af
+   0D8D 18 E8         [12] 2356 	jr	00102$
+   0D8F                    2357 ___str_31:
+   0D8F 4E 54 49 4F 53 20  2358 	.ascii "NTIOS 1.0"
+        31 2E 30
+   0D98 0D                 2359 	.db 0x0D
+   0D99 28 62 75 69 6C 74  2360 	.ascii "(built with SDCC)"
+        20 77 69 74 68 20
+        53 44 43 43 29
+   0DAA 00                 2361 	.db 0x00
+   0DAB                    2362 ___str_32:
+   0DAB 3E 20              2363 	.ascii "> "
+   0DAD 00                 2364 	.db 0x00
+                           2365 	.area _CODE
+                           2366 	.area _INITIALIZER
+                           2367 	.area _CABS (ABS)
